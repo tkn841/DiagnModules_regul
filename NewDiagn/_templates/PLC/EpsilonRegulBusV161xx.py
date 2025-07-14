@@ -1,4 +1,4 @@
-class RegulBus:
+class EpsilonRegulBusV161xx:
     def __init__(self):
         # словарь с типами модулей с их функциями
         self.dispatch_table = {'R500-ST-02-012': self.st_02_012,
@@ -65,7 +65,7 @@ class RegulBus:
         self.modul = ''
         self.crateRes = ''
         self.name_db = ''
-        self.box_res = ''
+        self.unit_pos_res = ''
         self.systemRes = ''
         self.racks = ''
         self.list_other = []
@@ -116,10 +116,10 @@ class RegulBus:
             codePLC.append(f'\t// Заполнение итоговых переменных, которые будут перервадаться на ВУ\n')
             codePLC.append(f'\tIF GLOBAL.IsDefaultPlc THEN\n')
             codePLC.append(f'\t\t{self.name_db}.{self.box}_STATE := {self.name_db}.{self.box}_LOCAL;\n')
-            codePLC.append(f'\t\t{self.name_db}.{self.box_res}_STATE := {self.name_db}.{self.box}_REMOTE;\n')
+            codePLC.append(f'\t\t{self.name_db}.{self.unit_pos_res}_STATE := {self.name_db}.{self.box}_REMOTE;\n')
             codePLC.append(f'\tELSE\n')
             codePLC.append(f'\t\t{self.name_db}.{self.box}_STATE := {self.name_db}.{self.box}_REMOTE;\n')
-            codePLC.append(f'\t\t{self.name_db}.{self.box_res}_STATE := {self.name_db}.{self.box}_LOCAL;\n')
+            codePLC.append(f'\t\t{self.name_db}.{self.unit_pos_res}_STATE := {self.name_db}.{self.box}_LOCAL;\n')
             codePLC.append(f'\tEND_IF\n\n')
         else:
             codePLC.append(f'\t{self.name_db}.{self.box}_STATE := STR_LWORD.LWORD_IMAGE;\n\n')
@@ -166,7 +166,7 @@ class RegulBus:
         codePLC.append(f'\tSTR_LWORD._LWORD.BIT_19 := (PSLed.getMBSPosition() = 2); // Положение переключателя MBS (положение 2)\n')
         codePLC.append(f'\tSTR_LWORD._LWORD.BIT_20 := GLOBAL.IsStateActive;\n')
         codePLC.append(f'\tSTR_LWORD._LWORD.BIT_21 := GLOBAL.IsDefaultPlc;\n')
-        codePLC.append(f'\tSTR_LWORD._LWORD.BIT_22 := (DIAG_CPU_self.modulES.{self.box}_STATE.DataCuid = DIAG_CPU_self.modulES.{self.box_res}_STATE.DataCuid) AND (DIAG_CPU_self.modulES.{self.box}_STATE.CodeCuid = DIAG_CPU_self.modulES.{self.box_res}_STATE.CodeCuid); // Синхронизации ПЛК (ВНИМАНИЕ ЗАПАЗДЫВАНИЕ 1 ТАКТ)\n\n')
+        codePLC.append(f'\tSTR_LWORD._LWORD.BIT_22 := (DIAG_CPU_self.modulES.{self.box}_STATE.DataCuid = DIAG_CPU_self.modulES.{self.unit_pos_res}_STATE.DataCuid) AND (DIAG_CPU_self.modulES.{self.box}_STATE.CodeCuid = DIAG_CPU_self.modulES.{self.unit_pos_res}_STATE.CodeCuid); // Синхронизации ПЛК (ВНИМАНИЕ ЗАПАЗДЫВАНИЕ 1 ТАКТ)\n\n')
 
         codePLC.append(f'\t// Запоминаем прошлое значение\n')
         codePLC.append(f'\t{self.box}_HeartBeat_old :=  {self.box}.HeartBeat;\n\n')
@@ -207,14 +207,14 @@ class RegulBus:
             codePLC.append(f'\t\t{self.name_db}.{self.box}_STATE.SysTimePLC := {self.name_db}.{self.box}_LOCAL.SysTimePLC;\n')
             codePLC.append(f'\t\t{self.name_db}.{self.box}_STATE.DataCuid := {self.name_db}.{self.box}_LOCAL.DataCuid;\n')
             codePLC.append(f'\t\t{self.name_db}.{self.box}_STATE.CodeCuid := {self.name_db}.{self.box}_LOCAL.CodeCuid;\n\n')
-            codePLC.append(f'\t\t{self.name_db}.{self.box_res}_STATE.STATE := {self.name_db}.{self.box}_REMOTE.STATE;\n')
-            codePLC.append(f'\t\t{self.name_db}.{self.box_res}_STATE.LOAD_CORE_1 := {self.name_db}.{self.box}_REMOTE.LOAD_CORE_1;\n')
-            codePLC.append(f'\t\t{self.name_db}.{self.box_res}_STATE.LOAD_CORE_2 := {self.name_db}.{self.box}_REMOTE.LOAD_CORE_2;\n')
+            codePLC.append(f'\t\t{self.name_db}.{self.unit_pos_res}_STATE.STATE := {self.name_db}.{self.box}_REMOTE.STATE;\n')
+            codePLC.append(f'\t\t{self.name_db}.{self.unit_pos_res}_STATE.LOAD_CORE_1 := {self.name_db}.{self.box}_REMOTE.LOAD_CORE_1;\n')
+            codePLC.append(f'\t\t{self.name_db}.{self.unit_pos_res}_STATE.LOAD_CORE_2 := {self.name_db}.{self.box}_REMOTE.LOAD_CORE_2;\n')
             codePLC.append(
-                f'\t\t{self.name_db}.{self.box_res}_STATE.TLastChangesPLC := {self.name_db}.{self.box}_REMOTE.TLastChangesPLC;\n')
-            codePLC.append(f'\t\t{self.name_db}.{self.box_res}_STATE.SysTimePLC := {self.name_db}.{self.box}_REMOTE.SysTimePLC;\n')
-            codePLC.append(f'\t\t{self.name_db}.{self.box_res}_STATE.DataCuid := {self.name_db}.{self.box}_REMOTE.DataCuid;\n')
-            codePLC.append(f'\t\t{self.name_db}.{self.box_res}_STATE.CodeCuid := {self.name_db}.{self.box}_REMOTE.CodeCuid;\n')
+                f'\t\t{self.name_db}.{self.unit_pos_res}_STATE.TLastChangesPLC := {self.name_db}.{self.box}_REMOTE.TLastChangesPLC;\n')
+            codePLC.append(f'\t\t{self.name_db}.{self.unit_pos_res}_STATE.SysTimePLC := {self.name_db}.{self.box}_REMOTE.SysTimePLC;\n')
+            codePLC.append(f'\t\t{self.name_db}.{self.unit_pos_res}_STATE.DataCuid := {self.name_db}.{self.box}_REMOTE.DataCuid;\n')
+            codePLC.append(f'\t\t{self.name_db}.{self.unit_pos_res}_STATE.CodeCuid := {self.name_db}.{self.box}_REMOTE.CodeCuid;\n')
             codePLC.append(f'\tELSE\n')
             codePLC.append(f'\t\t{self.name_db}.{self.box}_STATE.STATE := {self.name_db}.{self.box}_REMOTE.STATE;\n')
             codePLC.append(f'\t\t{self.name_db}.{self.box}_STATE.LOAD_CORE_1 := {self.name_db}.{self.box}_REMOTE.LOAD_CORE_1;\n')
@@ -223,13 +223,13 @@ class RegulBus:
             codePLC.append(f'\t\t{self.name_db}.{self.box}_STATE.SysTimePLC := {self.name_db}.{self.box}_REMOTE.SysTimePLC;\n')
             codePLC.append(f'\t\t{self.name_db}.{self.box}_STATE.DataCuid := {self.name_db}.{self.box}_REMOTE.DataCuid;\n')
             codePLC.append(f'\t\t{self.name_db}.{self.box}_STATE.CodeCuid := {self.name_db}.{self.box}_REMOTE.CodeCuid;\n\n')
-            codePLC.append(f'\t\t{self.name_db}.{self.box_res}_STATE.STATE := {self.name_db}.{self.box}_LOCAL.STATE;\n')
-            codePLC.append(f'\t\t{self.name_db}.{self.box_res}_STATE.LOAD_CORE_1 := {self.name_db}.{self.box}_LOCAL.LOAD_CORE_1;\n')
-            codePLC.append(f'\t\t{self.name_db}.{self.box_res}_STATE.LOAD_CORE_2 := {self.name_db}.{self.box}_LOCAL.LOAD_CORE_2;\n')
-            codePLC.append(f'\t\t{self.name_db}.{self.box_res}_STATE.TLastChangesPLC := {self.name_db}.{self.box}_LOCAL.TLastChangesPLC;\n')
-            codePLC.append(f'\t\t{self.name_db}.{self.box_res}_STATE.SysTimePLC := {self.name_db}.{self.box}_LOCAL.SysTimePLC;\n')
-            codePLC.append(f'\t\t{self.name_db}.{self.box_res}_STATE.DataCuid := {self.name_db}.{self.box}_LOCAL.DataCuid;\n')
-            codePLC.append(f'\t\t{self.name_db}.{self.box_res}_STATE.CodeCuid := {self.name_db}.{self.box}_LOCAL.CodeCuid;\n')
+            codePLC.append(f'\t\t{self.name_db}.{self.unit_pos_res}_STATE.STATE := {self.name_db}.{self.box}_LOCAL.STATE;\n')
+            codePLC.append(f'\t\t{self.name_db}.{self.unit_pos_res}_STATE.LOAD_CORE_1 := {self.name_db}.{self.box}_LOCAL.LOAD_CORE_1;\n')
+            codePLC.append(f'\t\t{self.name_db}.{self.unit_pos_res}_STATE.LOAD_CORE_2 := {self.name_db}.{self.box}_LOCAL.LOAD_CORE_2;\n')
+            codePLC.append(f'\t\t{self.name_db}.{self.unit_pos_res}_STATE.TLastChangesPLC := {self.name_db}.{self.box}_LOCAL.TLastChangesPLC;\n')
+            codePLC.append(f'\t\t{self.name_db}.{self.unit_pos_res}_STATE.SysTimePLC := {self.name_db}.{self.box}_LOCAL.SysTimePLC;\n')
+            codePLC.append(f'\t\t{self.name_db}.{self.unit_pos_res}_STATE.DataCuid := {self.name_db}.{self.box}_LOCAL.DataCuid;\n')
+            codePLC.append(f'\t\t{self.name_db}.{self.unit_pos_res}_STATE.CodeCuid := {self.name_db}.{self.box}_LOCAL.CodeCuid;\n')
             codePLC.append(f'\tEND_IF\n\n')
         else:
             codePLC.append(f'\t// Сохраняем STATE\n')
@@ -467,10 +467,10 @@ class RegulBus:
             codePLC.append(f'\t// Заполнение итоговых переменных, которые будут перервадаться на ВУ\n')
             codePLC.append(f'\tIF GLOBAL.IsDefaultPlc THEN\n')
             codePLC.append(f'\t\t{self.name_db}.{self.box}_STATE := {self.name_db}.{self.box}_LOCAL;\n')
-            codePLC.append(f'\t\t{self.name_db}.{self.box_res}_STATE := {self.name_db}.{self.box}_REMOTE;\n')
+            codePLC.append(f'\t\t{self.name_db}.{self.unit_pos_res}_STATE := {self.name_db}.{self.box}_REMOTE;\n')
             codePLC.append(f'\tELSE\n')
             codePLC.append(f'\t\t{self.name_db}.{self.box}_STATE := {self.name_db}.{self.box}_REMOTE;\n')
-            codePLC.append(f'\t\t{self.name_db}.{self.box_res}_STATE := {self.name_db}.{self.box}_LOCAL;\n')
+            codePLC.append(f'\t\t{self.name_db}.{self.unit_pos_res}_STATE := {self.name_db}.{self.box}_LOCAL;\n')
             codePLC.append(f'\tEND_IF\n\n')
         else:
             codePLC.append(
@@ -539,10 +539,10 @@ class RegulBus:
             codePLC.append(f'\t// Заполнение итоговых переменных, которые будут перервадаться на ВУ\n')
             codePLC.append(f'\tIF GLOBAL.IsDefaultPlc THEN\n')
             codePLC.append(f'\t\t{self.name_db}.{self.box}_STATE := {self.name_db}.{self.box}_LOCAL;\n')
-            codePLC.append(f'\t\t{self.name_db}.{self.box_res}_STATE := {self.name_db}.{self.box}_REMOTE;\n')
+            codePLC.append(f'\t\t{self.name_db}.{self.unit_pos_res}_STATE := {self.name_db}.{self.box}_REMOTE;\n')
             codePLC.append(f'\tELSE\n')
             codePLC.append(f'\t\t{self.name_db}.{self.box}_STATE := {self.name_db}.{self.box}_REMOTE;\n')
-            codePLC.append(f'\t\t{self.name_db}.{self.box_res}_STATE := {self.name_db}.{self.box}_LOCAL;\n')
+            codePLC.append(f'\t\t{self.name_db}.{self.unit_pos_res}_STATE := {self.name_db}.{self.box}_LOCAL;\n')
             codePLC.append(f'\tEND_IF\n\n')
         else:
             codePLC.append(f'\t{self.name_db}.{self.box}_STATE := STR_LWORD.LWORD_IMAGE;\n\n')
@@ -617,10 +617,10 @@ class RegulBus:
             codePLC.append(f'\t// Заполнение итоговых переменных, которые будут перервадаться на ВУ\n')
             codePLC.append(f'\tIF GLOBAL.IsDefaultPlc THEN\n')
             codePLC.append(f'\t\t{self.name_db}.{self.box}_STATE := {self.name_db}.{self.box}_LOCAL;\n')
-            codePLC.append(f'\t\t{self.name_db}.{self.box_res}_STATE := {self.name_db}.{self.box}_REMOTE;\n')
+            codePLC.append(f'\t\t{self.name_db}.{self.unit_pos_res}_STATE := {self.name_db}.{self.box}_REMOTE;\n')
             codePLC.append(f'\tELSE\n')
             codePLC.append(f'\t\t{self.name_db}.{self.box}_STATE := {self.name_db}.{self.box}_REMOTE;\n')
-            codePLC.append(f'\t\t{self.name_db}.{self.box_res}_STATE := {self.name_db}.{self.box}_LOCAL;\n')
+            codePLC.append(f'\t\t{self.name_db}.{self.unit_pos_res}_STATE := {self.name_db}.{self.box}_LOCAL;\n')
             codePLC.append(f'\tEND_IF\n\n')
         else:
             codePLC.append(f'\t{self.name_db}.{self.box}_STATE := STR_LWORD.LWORD_IMAGE;\n\n')
@@ -684,10 +684,10 @@ class RegulBus:
             codePLC.append(f'\t// Заполнение итоговых переменных, которые будут перервадаться на ВУ\n')
             codePLC.append(f'\tIF GLOBAL.IsDefaultPlc THEN\n')
             codePLC.append(f'\t\t{self.name_db}.{self.box}_STATE := {self.name_db}.{self.box}_LOCAL;\n')
-            codePLC.append(f'\t\t{self.name_db}.{self.box_res}_STATE := {self.name_db}.{self.box}_REMOTE;\n')
+            codePLC.append(f'\t\t{self.name_db}.{self.unit_pos_res}_STATE := {self.name_db}.{self.box}_REMOTE;\n')
             codePLC.append(f'\tELSE\n')
             codePLC.append(f'\t\t{self.name_db}.{self.box}_STATE := {self.name_db}.{self.box}_REMOTE;\n')
-            codePLC.append(f'\t\t{self.name_db}.{self.box_res}_STATE := {self.name_db}.{self.box}_LOCAL;\n')
+            codePLC.append(f'\t\t{self.name_db}.{self.unit_pos_res}_STATE := {self.name_db}.{self.box}_LOCAL;\n')
             codePLC.append(f'\tEND_IF\n\n')
         else:
             codePLC.append(
@@ -752,10 +752,10 @@ class RegulBus:
             codePLC.append(f'\t// Заполнение итоговых переменных, которые будут перервадаться на ВУ\n')
             codePLC.append(f'\tIF GLOBAL.IsDefaultPlc THEN\n')
             codePLC.append(f'\t\t{self.name_db}.{self.box}_STATE := {self.name_db}.{self.box}_LOCAL;\n')
-            codePLC.append(f'\t\t{self.name_db}.{self.box_res}_STATE := {self.name_db}.{self.box}_REMOTE;\n')
+            codePLC.append(f'\t\t{self.name_db}.{self.unit_pos_res}_STATE := {self.name_db}.{self.box}_REMOTE;\n')
             codePLC.append(f'\tELSE\n')
             codePLC.append(f'\t\t{self.name_db}.{self.box}_STATE := {self.name_db}.{self.box}_REMOTE;\n')
-            codePLC.append(f'\t\t{self.name_db}.{self.box_res}_STATE := {self.name_db}.{self.box}_LOCAL;\n')
+            codePLC.append(f'\t\t{self.name_db}.{self.unit_pos_res}_STATE := {self.name_db}.{self.box}_LOCAL;\n')
             codePLC.append(f'\tEND_IF\n\n')
         else:
             codePLC.append(f'\t{self.name_db}.{self.box}_STATE := STR_LWORD.LWORD_IMAGE; \n\n')
@@ -816,10 +816,10 @@ class RegulBus:
             codePLC.append(f'\t// Заполнение итоговых переменных, которые будут перервадаться на ВУ\n')
             codePLC.append(f'\tIF GLOBAL.IsDefaultPlc THEN\n')
             codePLC.append(f'\t\t{self.name_db}.{self.box}_STATE := {self.name_db}.{self.box}_LOCAL;\n')
-            codePLC.append(f'\t\t{self.name_db}.{self.box_res}_STATE := {self.name_db}.{self.box}_REMOTE;\n')
+            codePLC.append(f'\t\t{self.name_db}.{self.unit_pos_res}_STATE := {self.name_db}.{self.box}_REMOTE;\n')
             codePLC.append(f'\tELSE\n')
             codePLC.append(f'\t\t{self.name_db}.{self.box}_STATE := {self.name_db}.{self.box}_REMOTE;\n')
-            codePLC.append(f'\t\t{self.name_db}.{self.box_res}_STATE := {self.name_db}.{self.box}_LOCAL;\n')
+            codePLC.append(f'\t\t{self.name_db}.{self.unit_pos_res}_STATE := {self.name_db}.{self.box}_LOCAL;\n')
             codePLC.append(f'\tEND_IF\n\n')
         else:
             codePLC.append(f'\t{self.name_db}.{self.box}_STATE := STR_LWORD.LWORD_IMAGE; \n\n')
@@ -895,10 +895,10 @@ class RegulBus:
             codePLC.append(f'\t// Заполнение итоговых переменных, которые будут перервадаться на ВУ\n')
             codePLC.append(f'\tIF GLOBAL.IsDefaultPlc THEN\n')
             codePLC.append(f'\t\t{self.name_db}.{self.box}_STATE := {self.name_db}.{self.box}_LOCAL;\n')
-            codePLC.append(f'\t\t{self.name_db}.{self.box_res}_STATE := {self.name_db}.{self.box}_REMOTE;\n')
+            codePLC.append(f'\t\t{self.name_db}.{self.unit_pos_res}_STATE := {self.name_db}.{self.box}_REMOTE;\n')
             codePLC.append(f'\tELSE\n')
             codePLC.append(f'\t\t{self.name_db}.{self.box}_STATE := {self.name_db}.{self.box}_REMOTE;\n')
-            codePLC.append(f'\t\t{self.name_db}.{self.box_res}_STATE := {self.name_db}.{self.box}_LOCAL;\n')
+            codePLC.append(f'\t\t{self.name_db}.{self.unit_pos_res}_STATE := {self.name_db}.{self.box}_LOCAL;\n')
             codePLC.append(f'\tEND_IF\n\n')
         else:
             codePLC.append(f'\t{self.name_db}.{self.box}_STATE := STR_LWORD.LWORD_IMAGE;\n\n')
@@ -949,10 +949,10 @@ class RegulBus:
             codePLC.append(f'\t// Заполнение итоговых переменных, которые будут перервадаться на ВУ\n')
             codePLC.append(f'\tIF GLOBAL.IsDefaultPlc THEN\n')
             codePLC.append(f'\t\t{self.name_db}.{self.box}_STATE := {self.name_db}.{self.box}_LOCAL;\n')
-            codePLC.append(f'\t\t{self.name_db}.{self.box_res}_STATE := {self.name_db}.{self.box}_REMOTE;\n')
+            codePLC.append(f'\t\t{self.name_db}.{self.unit_pos_res}_STATE := {self.name_db}.{self.box}_REMOTE;\n')
             codePLC.append(f'\tELSE\n')
             codePLC.append(f'\t\t{self.name_db}.{self.box}_STATE := {self.name_db}.{self.box}_REMOTE;\n')
-            codePLC.append(f'\t\t{self.name_db}.{self.box_res}_STATE := {self.name_db}.{self.box}_LOCAL;\n')
+            codePLC.append(f'\t\t{self.name_db}.{self.unit_pos_res}_STATE := {self.name_db}.{self.box}_LOCAL;\n')
             codePLC.append(f'\tEND_IF\n\n')
         else:
             codePLC.append(f'\t{self.name_db}.{self.box}_STATE := STR_LWORD.LWORD_IMAGE; \n\n')
@@ -1008,10 +1008,10 @@ class RegulBus:
             codePLC.append(f'\t// Заполнение итоговых переменных, которые будут перервадаться на ВУ\n')
             codePLC.append(f'\tIF GLOBAL.IsDefaultPlc THEN\n')
             codePLC.append(f'\t\t{self.name_db}.{self.box}_STATE := {self.name_db}.{self.box}_LOCAL;\n')
-            codePLC.append(f'\t\t{self.name_db}.{self.box_res}_STATE := {self.name_db}.{self.box}_REMOTE;\n')
+            codePLC.append(f'\t\t{self.name_db}.{self.unit_pos_res}_STATE := {self.name_db}.{self.box}_REMOTE;\n')
             codePLC.append(f'\tELSE\n')
             codePLC.append(f'\t\t{self.name_db}.{self.box}_STATE := {self.name_db}.{self.box}_REMOTE;\n')
-            codePLC.append(f'\t\t{self.name_db}.{self.box_res}_STATE := {self.name_db}.{self.box}_LOCAL;\n')
+            codePLC.append(f'\t\t{self.name_db}.{self.unit_pos_res}_STATE := {self.name_db}.{self.box}_LOCAL;\n')
             codePLC.append(f'\tEND_IF\n\n')
         else:
             codePLC.append(f'\t\t{self.name_db}.{self.box}_STATE := STR_LWORD.LWORD_IMAGE; \n')
@@ -1064,10 +1064,10 @@ class RegulBus:
             codePLC.append(f'\t// Заполнение итоговых переменных, которые будут перервадаться на ВУ\n')
             codePLC.append(f'\tIF GLOBAL.IsDefaultPlc THEN\n')
             codePLC.append(f'\t\t{self.name_db}.{self.box}_STATE := {self.name_db}.{self.box}_LOCAL;\n')
-            codePLC.append(f'\t\t{self.name_db}.{self.box_res}_STATE := {self.name_db}.{self.box}_REMOTE;\n')
+            codePLC.append(f'\t\t{self.name_db}.{self.unit_pos_res}_STATE := {self.name_db}.{self.box}_REMOTE;\n')
             codePLC.append(f'\tELSE\n')
             codePLC.append(f'\t\t{self.name_db}.{self.box}_STATE := {self.name_db}.{self.box}_REMOTE;\n')
-            codePLC.append(f'\t\t{self.name_db}.{self.box_res}_STATE := {self.name_db}.{self.box}_LOCAL;\n')
+            codePLC.append(f'\t\t{self.name_db}.{self.unit_pos_res}_STATE := {self.name_db}.{self.box}_LOCAL;\n')
             codePLC.append(f'\tEND_IF\n\n')
         else:
             codePLC.append(
@@ -1120,10 +1120,10 @@ class RegulBus:
             codePLC.append(f'\t// Заполнение итоговых переменных, которые будут перервадаться на ВУ\n')
             codePLC.append(f'\tIF GLOBAL.IsDefaultPlc THEN\n')
             codePLC.append(f'\t\t{self.name_db}.{self.box}_STATE := {self.name_db}.{self.box}_LOCAL;\n')
-            codePLC.append(f'\t\t{self.name_db}.{self.box_res}_STATE := {self.name_db}.{self.box}_REMOTE;\n')
+            codePLC.append(f'\t\t{self.name_db}.{self.unit_pos_res}_STATE := {self.name_db}.{self.box}_REMOTE;\n')
             codePLC.append(f'\tELSE\n')
             codePLC.append(f'\t\t{self.name_db}.{self.box}_STATE := {self.name_db}.{self.box}_REMOTE;\n')
-            codePLC.append(f'\t\t{self.name_db}.{self.box_res}_STATE := {self.name_db}.{self.box}_LOCAL;\n')
+            codePLC.append(f'\t\t{self.name_db}.{self.unit_pos_res}_STATE := {self.name_db}.{self.box}_LOCAL;\n')
             codePLC.append(f'\tEND_IF\n\n')
         else:
             codePLC.append(f'\t{self.name_db}.{self.box}_STATE := STR_LWORD.LWORD_IMAGE; \n\n')
@@ -1175,10 +1175,10 @@ class RegulBus:
             codePLC.append(f'\t// Заполнение итоговых переменных, которые будут перервадаться на ВУ\n')
             codePLC.append(f'\tIF GLOBAL.IsDefaultPlc THEN\n')
             codePLC.append(f'\t\t{self.name_db}.{self.box}_STATE := {self.name_db}.{self.box}_LOCAL;\n')
-            codePLC.append(f'\t\t{self.name_db}.{self.box_res}_STATE := {self.name_db}.{self.box}_REMOTE;\n')
+            codePLC.append(f'\t\t{self.name_db}.{self.unit_pos_res}_STATE := {self.name_db}.{self.box}_REMOTE;\n')
             codePLC.append(f'\tELSE\n')
             codePLC.append(f'\t\t{self.name_db}.{self.box}_STATE := {self.name_db}.{self.box}_REMOTE;\n')
-            codePLC.append(f'\t\t{self.name_db}.{self.box_res}_STATE := {self.name_db}.{self.box}_LOCAL;\n')
+            codePLC.append(f'\t\t{self.name_db}.{self.unit_pos_res}_STATE := {self.name_db}.{self.box}_LOCAL;\n')
             codePLC.append(f'\tEND_IF\n\n')
         else:
             codePLC.append(f'\t{self.name_db}.{self.box}_STATE := STR_LWORD.LWORD_IMAGE; \n\n')
@@ -1233,10 +1233,10 @@ class RegulBus:
             codePLC.append(f'\t// Заполнение итоговых переменных, которые будут перервадаться на ВУ\n')
             codePLC.append(f'\tIF GLOBAL.IsDefaultPlc THEN\n')
             codePLC.append(f'\t\t{self.name_db}.{self.box}_STATE := {self.name_db}.{self.box}_LOCAL;\n')
-            codePLC.append(f'\t\t{self.name_db}.{self.box_res}_STATE := {self.name_db}.{self.box}_REMOTE;\n')
+            codePLC.append(f'\t\t{self.name_db}.{self.unit_pos_res}_STATE := {self.name_db}.{self.box}_REMOTE;\n')
             codePLC.append(f'\tELSE\n')
             codePLC.append(f'\t\t{self.name_db}.{self.box}_STATE := {self.name_db}.{self.box}_REMOTE;\n')
-            codePLC.append(f'\t\t{self.name_db}.{self.box_res}_STATE := {self.name_db}.{self.box}_LOCAL;\n')
+            codePLC.append(f'\t\t{self.name_db}.{self.unit_pos_res}_STATE := {self.name_db}.{self.box}_LOCAL;\n')
             codePLC.append(f'\tEND_IF\n\n')
         else:
             codePLC.append(f'\t{self.name_db}.{self.box}_STATE := STR_LWORD.LWORD_IMAGE; \n\n')
@@ -1300,16 +1300,16 @@ class RegulBus:
             codePLC.append(f'\t\t{self.name_db}.{self.box}_STATE := {self.name_db}.{self.box}_LOCAL;\n')
             codePLC.append(f'\t\t{self.name_db}.{self.box}_STATE2 := {self.name_db}.{self.box}_LOCAL2;\n')
             codePLC.append(f'\t\t{self.name_db}.{self.box}_STATE3 := {self.name_db}.{self.box}_LOCAL3;\n')
-            codePLC.append(f'\t\t{self.name_db}.{self.box_res}_STATE := {self.name_db}.{self.box}_REMOTE;\n')
-            codePLC.append(f'\t\t{self.name_db}.{self.box_res}_STATE2 := {self.name_db}.{self.box}_REMOTE2;\n')
-            codePLC.append(f'\t\t{self.name_db}.{self.box_res}_STATE3 := {self.name_db}.{self.box}_REMOTE3;\n')
+            codePLC.append(f'\t\t{self.name_db}.{self.unit_pos_res}_STATE := {self.name_db}.{self.box}_REMOTE;\n')
+            codePLC.append(f'\t\t{self.name_db}.{self.unit_pos_res}_STATE2 := {self.name_db}.{self.box}_REMOTE2;\n')
+            codePLC.append(f'\t\t{self.name_db}.{self.unit_pos_res}_STATE3 := {self.name_db}.{self.box}_REMOTE3;\n')
             codePLC.append(f'\tELSE\n')
             codePLC.append(f'\t\t{self.name_db}.{self.box}_STATE := {self.name_db}.{self.box}_REMOTE;\n')
             codePLC.append(f'\t\t{self.name_db}.{self.box}_STATE2 := {self.name_db}.{self.box}_REMOTE2;\n')
             codePLC.append(f'\t\t{self.name_db}.{self.box}_STATE3 := {self.name_db}.{self.box}_REMOTE3;\n')
-            codePLC.append(f'\t\t{self.name_db}.{self.box_res}_STATE := {self.name_db}.{self.box}_LOCAL;\n')
-            codePLC.append(f'\t\t{self.name_db}.{self.box_res}_STATE2 := {self.name_db}.{self.box}_LOCAL2;\n')
-            codePLC.append(f'\t\t{self.name_db}.{self.box_res}_STATE3 := {self.name_db}.{self.box}_LOCAL3;\n')
+            codePLC.append(f'\t\t{self.name_db}.{self.unit_pos_res}_STATE := {self.name_db}.{self.box}_LOCAL;\n')
+            codePLC.append(f'\t\t{self.name_db}.{self.unit_pos_res}_STATE2 := {self.name_db}.{self.box}_LOCAL2;\n')
+            codePLC.append(f'\t\t{self.name_db}.{self.unit_pos_res}_STATE3 := {self.name_db}.{self.box}_LOCAL3;\n')
             codePLC.append(f'\tEND_IF\n\n')
         else:
             codePLC.append(f'\t{self.name_db}.{self.box}_STATE := STR_LWORD.LWORD_IMAGE; \n')
@@ -1369,10 +1369,10 @@ class RegulBus:
             codePLC.append(f'\t// Заполнение итоговых переменных, которые будут перервадаться на ВУ\n')
             codePLC.append(f'\tIF GLOBAL.IsDefaultPlc THEN\n')
             codePLC.append(f'\t\t{self.name_db}.{self.box}_STATE := {self.name_db}.{self.box}_LOCAL;\n')
-            codePLC.append(f'\t\t{self.name_db}.{self.box_res}_STATE := {self.name_db}.{self.box}_REMOTE;\n')
+            codePLC.append(f'\t\t{self.name_db}.{self.unit_pos_res}_STATE := {self.name_db}.{self.box}_REMOTE;\n')
             codePLC.append(f'\tELSE\n')
             codePLC.append(f'\t\t{self.name_db}.{self.box}_STATE := {self.name_db}.{self.box}_REMOTE;\n')
-            codePLC.append(f'\t\t{self.name_db}.{self.box_res}_STATE := {self.name_db}.{self.box}_LOCAL;\n')
+            codePLC.append(f'\t\t{self.name_db}.{self.unit_pos_res}_STATE := {self.name_db}.{self.box}_LOCAL;\n')
             codePLC.append(f'\tEND_IF\n\n')
         else:
             codePLC.append(f'\t{self.name_db}.{self.box}_STATE := STR_LWORD.LWORD_IMAGE; \n')
@@ -1429,10 +1429,10 @@ class RegulBus:
             codePLC.append(f'\t// Заполнение итоговых переменных, которые будут перервадаться на ВУ\n')
             codePLC.append(f'\tIF GLOBAL.IsDefaultPlc THEN\n')
             codePLC.append(f'\t\t{self.name_db}.{self.box}_STATE := {self.name_db}.{self.box}_LOCAL;\n')
-            codePLC.append(f'\t\t{self.name_db}.{self.box_res}_STATE := {self.name_db}.{self.box}_REMOTE;\n')
+            codePLC.append(f'\t\t{self.name_db}.{self.unit_pos_res}_STATE := {self.name_db}.{self.box}_REMOTE;\n')
             codePLC.append(f'\tELSE\n')
             codePLC.append(f'\t\t{self.name_db}.{self.box}_STATE := {self.name_db}.{self.box}_REMOTE;\n')
-            codePLC.append(f'\t\t{self.name_db}.{self.box_res}_STATE := {self.name_db}.{self.box}_LOCAL;\n')
+            codePLC.append(f'\t\t{self.name_db}.{self.unit_pos_res}_STATE := {self.name_db}.{self.box}_LOCAL;\n')
             codePLC.append(f'\tEND_IF\n\n')
         else:
             codePLC.append(f'\t{self.name_db}.{self.box}_STATE := STR_LWORD.LWORD_IMAGE; \n\n')
@@ -1482,10 +1482,10 @@ class RegulBus:
 
             codePLC.append(f'\tIF GLOBAL.IsDefaultPlc THEN\n')
             codePLC.append(f'\t\t{self.name_db}.{self.box}_STATE := {self.name_db}.{self.box}_LOCAL;\n')
-            codePLC.append(f'\t\t{self.name_db}.{self.box_res}_STATE := {self.name_db}.{self.box}_REMOTE;\n')
+            codePLC.append(f'\t\t{self.name_db}.{self.unit_pos_res}_STATE := {self.name_db}.{self.box}_REMOTE;\n')
             codePLC.append(f'\tELSE\n')
             codePLC.append(f'\t\t{self.name_db}.{self.box}_STATE := {self.name_db}.{self.box}_REMOTE;\n')
-            codePLC.append(f'\t\t{self.name_db}.{self.box_res}_STATE := {self.name_db}.{self.box}_LOCAL;\n')
+            codePLC.append(f'\t\t{self.name_db}.{self.unit_pos_res}_STATE := {self.name_db}.{self.box}_LOCAL;\n')
             codePLC.append(f'\tEND_IF\n\n')
         else:
             codePLC.append(f'\t{self.name_db}.{self.box}_STATE := STR_LWORD.LWORD_IMAGE; \n\n')
@@ -1533,10 +1533,10 @@ class RegulBus:
 
             codePLC.append(f'\tIF GLOBAL.IsDefaultPlc THEN\n')
             codePLC.append(f'\t\t{self.name_db}.{self.box}_STATE := {self.name_db}.{self.box}_LOCAL;\n')
-            codePLC.append(f'\t\t{self.name_db}.{self.box_res}_STATE := {self.name_db}.{self.box}_REMOTE;\n')
+            codePLC.append(f'\t\t{self.name_db}.{self.unit_pos_res}_STATE := {self.name_db}.{self.box}_REMOTE;\n')
             codePLC.append(f'\tELSE\n')
             codePLC.append(f'\t\t{self.name_db}.{self.box}_STATE := {self.name_db}.{self.box}_REMOTE;\n')
-            codePLC.append(f'\t\t{self.name_db}.{self.box_res}_STATE := {self.name_db}.{self.box}_LOCAL;\n')
+            codePLC.append(f'\t\t{self.name_db}.{self.unit_pos_res}_STATE := {self.name_db}.{self.box}_LOCAL;\n')
             codePLC.append(f'\tEND_IF\n\n')
         else:
             codePLC.append(f'\t{self.name_db}.{self.box}_STATE := STR_LWORD.LWORD_IMAGE; \n\n')
@@ -1588,10 +1588,10 @@ class RegulBus:
 
             codePLC.append(f'\tIF GLOBAL.IsDefaultPlc THEN\n')
             codePLC.append(f'\t\t{self.name_db}.{self.box}_STATE := {self.name_db}.{self.box}_LOCAL;\n')
-            codePLC.append(f'\t\t{self.name_db}.{self.box_res}_STATE := {self.name_db}.{self.box}_REMOTE;\n')
+            codePLC.append(f'\t\t{self.name_db}.{self.unit_pos_res}_STATE := {self.name_db}.{self.box}_REMOTE;\n')
             codePLC.append(f'\tELSE\n')
             codePLC.append(f'\t\t{self.name_db}.{self.box}_STATE := {self.name_db}.{self.box}_REMOTE;\n')
-            codePLC.append(f'\t\t{self.name_db}.{self.box_res}_STATE := {self.name_db}.{self.box}_LOCAL;\n')
+            codePLC.append(f'\t\t{self.name_db}.{self.unit_pos_res}_STATE := {self.name_db}.{self.box}_LOCAL;\n')
             codePLC.append(f'\tEND_IF\n\n')
         else:
             codePLC.append(f'\t{self.name_db}.{self.box}_STATE := STR_LWORD.LWORD_IMAGE; \n\n')
@@ -1649,10 +1649,10 @@ class RegulBus:
 
             codePLC.append(f'\tIF GLOBAL.IsDefaultPlc THEN\n')
             codePLC.append(f'\t\t{self.name_db}.{self.box}_STATE := {self.name_db}.{self.box}_LOCAL;\n')
-            codePLC.append(f'\t\t{self.name_db}.{self.box_res}_STATE := {self.name_db}.{self.box}_REMOTE;\n')
+            codePLC.append(f'\t\t{self.name_db}.{self.unit_pos_res}_STATE := {self.name_db}.{self.box}_REMOTE;\n')
             codePLC.append(f'\tELSE\n')
             codePLC.append(f'\t\t{self.name_db}.{self.box}_STATE := {self.name_db}.{self.box}_REMOTE;\n')
-            codePLC.append(f'\t\t{self.name_db}.{self.box_res}_STATE := {self.name_db}.{self.box}_LOCAL;\n')
+            codePLC.append(f'\t\t{self.name_db}.{self.unit_pos_res}_STATE := {self.name_db}.{self.box}_LOCAL;\n')
             codePLC.append(f'\tEND_IF\n\n')
         else:
             codePLC.append(f'\t{self.name_db}.{self.box}_STATE := STR_LWORD.LWORD_IMAGE; \n\n')

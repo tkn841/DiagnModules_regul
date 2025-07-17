@@ -65,12 +65,14 @@ class Astra1720RegulBus:
 
                                'R500-DA-03-011 [SM 3FI 1FO 6DI 6DO] ENC': self.da_03_011}
         self.box = ''
+        self.unit_pos = ''
         self.modul = ''
         self.crateRes = ''
         self.name_db = ''
         self.unit_pos_res = ''
         self.systemRes = ''
-        self.racks = ''
+        self.racks = []
+        self.verPdoSdo = ''
         self.list_other = []
     # Функция генерации кода для
     # R500-ST-02-012

@@ -60,14 +60,15 @@ class EpsilonRegulBusOSV161xx:
                                'R500-CP-06-111 [6 ETHERNET]': self.cp_06_111,
 
                                'R500-DA-03-011 [SM 3FI 1FO 6DI 6DO] ENC': self.da_03_011}
-        self.sdo_pdo = ''
         self.box = ''
+        self.unit_pos = ''
         self.modul = ''
         self.crateRes = ''
         self.name_db = ''
         self.unit_pos_res = ''
         self.systemRes = ''
-        self.racks = ''
+        self.racks = []
+        self.verPdoSdo = ''
         self.list_other = []
 
     def st_02_012(self):
@@ -450,13 +451,13 @@ class EpsilonRegulBusOSV161xx:
         offset_bit = 6
         for i in range(0, 9):
             bit = f'BIT_0{offset_bit + i}' if i < 4 else f'BIT_{offset_bit + i}'
-            codePLC.append(f'\tSTR_LWORD._LWORD.{bit} := ({self.box}.Inputs_v{self.sdo_pdo}^.ch[{i-1}].Status AND 16#E1) <> 0;  // Неисправность канала {i} \n')
+            codePLC.append(f'\tSTR_LWORD._LWORD.{bit} := ({self.box}.Inputs_v{self.verPdoSdo}^.ch[{i-1}].Status AND 16#E1) <> 0;  // Неисправность канала {i} \n')
 
         # Выход за пределы эл.ед. канала
         offset_bit = 14
         for i in range(0, 9):
             bit = f'BIT_{offset_bit + i}'
-            codePLC.append(f'\tSTR_LWORD._LWORD.{bit} := ({self.box}.Inputs_v{self.sdo_pdo}^.ch[{i-1}].Status AND 16#1E) <> 0;	// Выход за пределы эл.ед. канала {i} \n')
+            codePLC.append(f'\tSTR_LWORD._LWORD.{bit} := ({self.box}.Inputs_v{self.verPdoSdo}^.ch[{i-1}].Status AND 16#1E) <> 0;	// Выход за пределы эл.ед. канала {i} \n')
 
         codePLC.append(f'\t{self.box}_HeartBeat_old := {self.box}.HeartBeat;\n\n')
 
@@ -518,14 +519,14 @@ class EpsilonRegulBusOSV161xx:
         offset_bit = 6
         for i in range(0, 9):
             bit = f'BIT_0{offset_bit + i}' if i < 4 else f'BIT_{offset_bit + i}'
-            codePLC.append(f'\tSTR_LWORD._LWORD.{bit} := ({self.box}.Inputs_v{self.sdo_pdo}^.ch[{i-1}].Status AND 16#E1) <> 0;  // Неисправность канала {i} \n')
+            codePLC.append(f'\tSTR_LWORD._LWORD.{bit} := ({self.box}.Inputs_v{self.verPdoSdo}^.ch[{i-1}].Status AND 16#E1) <> 0;  // Неисправность канала {i} \n')
 
 
         # Выход за пределы эл.ед. канала
         offset_bit = 14
         for i in range(0, 9):
             bit = f'BIT_{offset_bit + i}'
-            codePLC.append(f'\tSTR_LWORD._LWORD.{bit} := ({self.box}.Inputs_v{self.sdo_pdo}^.ch[{i-1}].Status AND 16#1E) <> 0;	// Выход за пределы эл.ед. канала {i} \n')
+            codePLC.append(f'\tSTR_LWORD._LWORD.{bit} := ({self.box}.Inputs_v{self.verPdoSdo}^.ch[{i-1}].Status AND 16#1E) <> 0;	// Выход за пределы эл.ед. канала {i} \n')
 
         codePLC.append(f'\tSTR_LWORD._LWORD.BIT_23 := {self.box}.Inputs_v1^.PowerState.IntPowerState_0;	// Состояние питания внутренней шины 1 \n')
         codePLC.append(f'\tSTR_LWORD._LWORD.BIT_24 := {self.box}.Inputs_v1^.PowerState.IntPowerState_1;	// Состояние питания внутренней шины 2 \n\n')
@@ -589,13 +590,13 @@ class EpsilonRegulBusOSV161xx:
         offset_bit = 6
         for i in range(0, 9):
             bit = f'BIT_0{offset_bit + i}' if i < 4 else f'BIT_{offset_bit + i}'
-            codePLC.append(f'\tSTR_LWORD._LWORD.{bit} := ({self.box}.Inputs_v{self.sdo_pdo}^.ch[{i - 1}].Status AND 16#E1) <> 0;  // Неисправность канала {i} \n')
+            codePLC.append(f'\tSTR_LWORD._LWORD.{bit} := ({self.box}.Inputs_v{self.verPdoSdo}^.ch[{i - 1}].Status AND 16#E1) <> 0;  // Неисправность канала {i} \n')
 
         # Выход за пределы эл.ед. канала
         offset_bit = 14
         for i in range(0, 9):
             bit = f'BIT_{offset_bit + i}'
-            codePLC.append(f'\tSTR_LWORD._LWORD.{bit} := ({self.box}.Inputs_v{self.sdo_pdo}^.ch[{i - 1}].Status AND 16#1E) <> 0;	// Выход за пределы эл.ед. канала {i} \n')
+            codePLC.append(f'\tSTR_LWORD._LWORD.{bit} := ({self.box}.Inputs_v{self.verPdoSdo}^.ch[{i - 1}].Status AND 16#1E) <> 0;	// Выход за пределы эл.ед. канала {i} \n')
 
         codePLC.append(f'\tSTR_LWORD._LWORD.BIT_23 := {self.box}.Inputs_v1^.PowerState.IntPowerState_0	// Состояние питания внутренней шины 1 \n')
         codePLC.append(f'\tSTR_LWORD._LWORD.BIT_24 := {self.box}.Inputs_v1^.PowerState.IntPowerState_1	// Состояние питания внутренней шины 2 \n')
@@ -668,13 +669,13 @@ class EpsilonRegulBusOSV161xx:
         offset_bit = 6
         for i in range(0, 9):
             bit = f'BIT_0{offset_bit + i}' if i < 4 else f'BIT_{offset_bit + i}'
-            codePLC.append(f'\tSTR_LWORD._LWORD.{bit} := ({self.box}.Inputs_v{self.sdo_pdo}^.ch[{i-1}].Status AND 16#E1) <> 0;  // Неисправность канала {i} \n')
+            codePLC.append(f'\tSTR_LWORD._LWORD.{bit} := ({self.box}.Inputs_v{self.verPdoSdo}^.ch[{i-1}].Status AND 16#E1) <> 0;  // Неисправность канала {i} \n')
 
         # Выход за пределы эл.ед. канала
         offset_bit = 14
         for i in range(0, 9):
             bit = f'BIT_{offset_bit + i}'
-            codePLC.append(f'\tSTR_LWORD._LWORD.{bit} := ({self.box}.Inputs_v{self.sdo_pdo}^.ch[{i-1}].Status AND 16#1E) <> 0;	// Выход за пределы эл.ед. канала {i} \n')
+            codePLC.append(f'\tSTR_LWORD._LWORD.{bit} := ({self.box}.Inputs_v{self.verPdoSdo}^.ch[{i-1}].Status AND 16#1E) <> 0;	// Выход за пределы эл.ед. канала {i} \n')
 
         codePLC.append(f'\t{self.box}_HeartBeat_old :=  {self.box}.HeartBeat; \n\n')
 
@@ -737,13 +738,13 @@ class EpsilonRegulBusOSV161xx:
         offset_bit = 6
         for i in range(0, 17):
             bit = f'BIT_0{offset_bit + i}' if i < 4 else f'BIT_{offset_bit + i}'
-            codePLC.append(f'\tSTR_LWORD._LWORD.{bit} := ({self.box}.Inputs_v{self.sdo_pdo}^.ch[{i - 1}].Status AND 16#E1) <> 0;  // Неисправность канала {i} \n')
+            codePLC.append(f'\tSTR_LWORD._LWORD.{bit} := ({self.box}.Inputs_v{self.verPdoSdo}^.ch[{i - 1}].Status AND 16#E1) <> 0;  // Неисправность канала {i} \n')
 
         # Неисправность каналов
         offset_bit = 22
         for i in range(0, 17):
             bit = f'BIT_{offset_bit + i}'
-            codePLC.append(f'\tSTR_LWORD._LWORD.{bit} := ({self.box}.Inputs_v{self.sdo_pdo}^.ch[{i-1}].Status AND 16#1E) <> 0;	// Выход за пределы эл.ед. канала {i} \n')
+            codePLC.append(f'\tSTR_LWORD._LWORD.{bit} := ({self.box}.Inputs_v{self.verPdoSdo}^.ch[{i-1}].Status AND 16#1E) <> 0;	// Выход за пределы эл.ед. канала {i} \n')
 
         codePLC.append(f'\n\t{self.box}_HeartBeat_old :=  {self.box}.HeartBeat; \n\n')
         if self.crateRes:
@@ -806,7 +807,7 @@ class EpsilonRegulBusOSV161xx:
         offset_bit = 7
         for i in range(0, 9):
             bit = f'BIT_0{offset_bit + i}' if i < 4 else f'BIT_{offset_bit + i}'
-            codePLC.append(f'\tSTR_LWORD._LWORD.{bit} := {self.box}.Inputs_v{self.sdo_pdo}^.Status.Breakage{i-1}; // Обрыв канала {i} \n')
+            codePLC.append(f'\tSTR_LWORD._LWORD.{bit} := {self.box}.Inputs_v{self.verPdoSdo}^.Status.Breakage{i-1}; // Обрыв канала {i} \n')
 
         codePLC.append(f'\t{self.box}_HeartBeat_old :=  {self.box}.HeartBeat; \n\n')
 
@@ -874,17 +875,17 @@ class EpsilonRegulBusOSV161xx:
         offset_bit = 6
         for i in range(0, 9):
             bit = f'BIT_0{offset_bit + i}' if i < 4 else f'BIT_{offset_bit + i}'
-            codePLC.append(f'\tSTR_LWORD._LWORD.{bit} := ({self.box}.Inputs_v{self.sdo_pdo}^.ch[{i - 1}].Status AND 16#E1) <> 0;  // Неисправность канала {i} \n')
+            codePLC.append(f'\tSTR_LWORD._LWORD.{bit} := ({self.box}.Inputs_v{self.verPdoSdo}^.ch[{i - 1}].Status AND 16#E1) <> 0;  // Неисправность канала {i} \n')
 
         # Выход за пределы эл.ед. канала
         offset_bit = 14
         for i in range(0, 9):
             bit = f'BIT_{offset_bit + i}'
-            codePLC.append(f'\tSTR_LWORD._LWORD.{bit} := ({self.box}.Inputs_v{self.sdo_pdo}^.ch[{i - 1}].Status AND 16#1E) <> 0;	// Выход за пределы эл.ед. канала {i} \n')
+            codePLC.append(f'\tSTR_LWORD._LWORD.{bit} := ({self.box}.Inputs_v{self.verPdoSdo}^.ch[{i - 1}].Status AND 16#1E) <> 0;	// Выход за пределы эл.ед. канала {i} \n')
 
-        codePLC.append(f'\tSTR_LWORD._LWORD.BIT_23 := {self.box}.Inputs_v{self.sdo_pdo}^.self.moduleStatus.NoOuterPowerSupply;	// Нет внешнего питания (вых.) \n')
-        codePLC.append(f'\tSTR_LWORD._LWORD.BIT_24 := {self.box}.Inputs_v{self.sdo_pdo}^.self.moduleStatus.self.moduleStatus.Breakage0;	// Обрыв канала 1 (вых.) \n')
-        codePLC.append(f'\tSTR_LWORD._LWORD.BIT_25 := {self.box}.Inputs_v{self.sdo_pdo}^.self.moduleStatus.self.moduleStatus.Breakage1;	// Обрыв канала 2 (вых.) \n\n')
+        codePLC.append(f'\tSTR_LWORD._LWORD.BIT_23 := {self.box}.Inputs_v{self.verPdoSdo}^.self.moduleStatus.NoOuterPowerSupply;	// Нет внешнего питания (вых.) \n')
+        codePLC.append(f'\tSTR_LWORD._LWORD.BIT_24 := {self.box}.Inputs_v{self.verPdoSdo}^.self.moduleStatus.self.moduleStatus.Breakage0;	// Обрыв канала 1 (вых.) \n')
+        codePLC.append(f'\tSTR_LWORD._LWORD.BIT_25 := {self.box}.Inputs_v{self.verPdoSdo}^.self.moduleStatus.self.moduleStatus.Breakage1;	// Обрыв канала 2 (вых.) \n\n')
 
         codePLC.append(f'\t{self.box}_HeartBeat_old := {self.box}.HeartBeat;\n\n')
 
@@ -939,7 +940,7 @@ class EpsilonRegulBusOSV161xx:
             codePLC.append(f'\t// STR_LWORD._LWORD.BIT_04 := FALSE; // B1 (желтый)\n')
             codePLC.append(f'\tSTR_LWORD._LWORD.BIT_05 := ({self.box}.ActiveBusNum = 2); // B2 (зеленый)\n')
             codePLC.append(f'\t// STR_LWORD._LWORD.BIT_06 := FALSE; // B2 (желтый)\n')
-        codePLC.append(f'\tSTR_LWORD.LWORD_IMAGE := STR_LWORD.LWORD_IMAGE OR SHL(WORD_TO_LWORD({self.box}.Inputs_v{self.sdo_pdo}^.Discrets), 7);\n\n')
+        codePLC.append(f'\tSTR_LWORD.LWORD_IMAGE := STR_LWORD.LWORD_IMAGE OR SHL(WORD_TO_LWORD({self.box}.Inputs_v{self.verPdoSdo}^.Discrets), 7);\n\n')
 
         codePLC.append(f'\t{self.box}_HeartBeat_old :=  {self.box}.HeartBeat; \n\n')
 
@@ -995,10 +996,10 @@ class EpsilonRegulBusOSV161xx:
             codePLC.append(f'\tSTR_LWORD._LWORD.BIT_05 := ({self.box}.ActiveBusNum = 2); // B2 (зеленый)\n')
             codePLC.append(f'\t// STR_LWORD._LWORD.BIT_06 := FALSE; // B2 (желтый)\n')
 
-        codePLC.append(f'\tSTR_LWORD.LWORD_IMAGE := STR_LWORD.LWORD_IMAGE OR SHL(BYTE_TO_LWORD({self.box}.Inputs_v{self.sdo_pdo}^.PowerState), 7); \n')
-        codePLC.append(f'\tSTR_LWORD.LWORD_IMAGE := STR_LWORD.LWORD_IMAGE OR SHL(WORD_TO_LWORD({self.box}.Inputs_v{self.sdo_pdo}^.OC), 10); \n')
-        codePLC.append(f'\tSTR_LWORD.LWORD_IMAGE := STR_LWORD.LWORD_IMAGE OR SHL(WORD_TO_LWORD({self.box}.Inputs_v{self.sdo_pdo}^.SC), 26); \n')
-        codePLC.append(f'\tSTR_LWORD.LWORD_IMAGE := STR_LWORD.LWORD_IMAGE OR SHL(WORD_TO_LWORD({self.box}.Inputs_v{self.sdo_pdo}^.Discrets), 42); \n\n')
+        codePLC.append(f'\tSTR_LWORD.LWORD_IMAGE := STR_LWORD.LWORD_IMAGE OR SHL(BYTE_TO_LWORD({self.box}.Inputs_v{self.verPdoSdo}^.PowerState), 7); \n')
+        codePLC.append(f'\tSTR_LWORD.LWORD_IMAGE := STR_LWORD.LWORD_IMAGE OR SHL(WORD_TO_LWORD({self.box}.Inputs_v{self.verPdoSdo}^.OC), 10); \n')
+        codePLC.append(f'\tSTR_LWORD.LWORD_IMAGE := STR_LWORD.LWORD_IMAGE OR SHL(WORD_TO_LWORD({self.box}.Inputs_v{self.verPdoSdo}^.SC), 26); \n')
+        codePLC.append(f'\tSTR_LWORD.LWORD_IMAGE := STR_LWORD.LWORD_IMAGE OR SHL(WORD_TO_LWORD({self.box}.Inputs_v{self.verPdoSdo}^.Discrets), 42); \n\n')
 
         codePLC.append(f'\t{self.box}_HeartBeat_old :=  {self.box}.HeartBeat; \n\n')
 
@@ -1054,7 +1055,7 @@ class EpsilonRegulBusOSV161xx:
             codePLC.append(f'\tSTR_LWORD._LWORD.BIT_05 := ({self.box}.ActiveBusNum = 1); // B2 (зеленый)\n')
             codePLC.append(f'\t// STR_LWORD._LWORD.BIT_06 := FALSE; // B2 (желтый)\n')
 
-        codePLC.append(f'\tSTR_LWORD.LWORD_IMAGE := STR_LWORD.LWORD_IMAGE OR SHL(DWORD_TO_LWORD({self.box}.Inputs_v{self.sdo_pdo}^.Discrets), 7); \n\n')
+        codePLC.append(f'\tSTR_LWORD.LWORD_IMAGE := STR_LWORD.LWORD_IMAGE OR SHL(DWORD_TO_LWORD({self.box}.Inputs_v{self.verPdoSdo}^.Discrets), 7); \n\n')
 
         codePLC.append(f'\t{self.box}_HeartBeat_old :=  {self.box}.HeartBeat; \n\n')
 
@@ -1110,7 +1111,7 @@ class EpsilonRegulBusOSV161xx:
             codePLC.append(f'\tSTR_LWORD._LWORD.BIT_05 := ({self.box}.ActiveBusNum = 1) AND PLC_RIGHT_MASTER; // B2 (зеленый)\n')
             codePLC.append(f'\t// STR_LWORD._LWORD.BIT_06 := FALSE; // B2 (желтый)\n')
 
-        codePLC.append(f'\tSTR_LWORD.LWORD_IMAGE := STR_LWORD.LWORD_IMAGE OR SHL(WORD_TO_LWORD({self.box}.Outputs_v{self.sdo_pdo}^.Discrets), 7); \n\n')
+        codePLC.append(f'\tSTR_LWORD.LWORD_IMAGE := STR_LWORD.LWORD_IMAGE OR SHL(WORD_TO_LWORD({self.box}.Outputs_v{self.verPdoSdo}^.Discrets), 7); \n\n')
 
         codePLC.append(f'\t{self.box}_HeartBeat_old :=  {self.box}.HeartBeat; \n\n')
 
@@ -1165,7 +1166,7 @@ class EpsilonRegulBusOSV161xx:
             codePLC.append(f'\tSTR_LWORD._LWORD.BIT_05 := ({self.box}.ActiveBusNum = 1) AND PLC_RIGHT_MASTER; // B2 (зеленый)\n')
             codePLC.append(f'\t// STR_LWORD._LWORD.BIT_06 := FALSE; // B2 (желтый)\n')
 
-        codePLC.append(f'\tSTR_LWORD.LWORD_IMAGE := STR_LWORD.LWORD_IMAGE OR SHL(DWORD_TO_LWORD({self.box}.Outputs_v{self.sdo_pdo}^.Discrets), 7); \n\n')
+        codePLC.append(f'\tSTR_LWORD.LWORD_IMAGE := STR_LWORD.LWORD_IMAGE OR SHL(DWORD_TO_LWORD({self.box}.Outputs_v{self.verPdoSdo}^.Discrets), 7); \n\n')
 
         codePLC.append(f'\t{self.box}_HeartBeat_old :=  {self.box}.HeartBeat; \n\n')
 
@@ -1220,10 +1221,10 @@ class EpsilonRegulBusOSV161xx:
             codePLC.append(f'\tSTR_LWORD._LWORD.BIT_05 := ({self.box}.ActiveBusNum = 1) AND PLC_RIGHT_MASTER; // B2 (зеленый)\n')
             codePLC.append(f'\t// STR_LWORD._LWORD.BIT_06 := FALSE; // B2 (желтый)\n')
 
-        codePLC.append(f'\tSTR_LWORD._LWORD.BIT_07 := {self.box}.Inputs_v{self.sdo_pdo}^.PowerState.IntPowerState_0; // Внутреняя шина 1\n')
-        codePLC.append(f'\tSTR_LWORD._LWORD.BIT_08 := {self.box}.Inputs_v{self.sdo_pdo}^.PowerState.IntPowerState_1; // Внутреняя шина 2\n')
+        codePLC.append(f'\tSTR_LWORD._LWORD.BIT_07 := {self.box}.Inputs_v{self.verPdoSdo}^.PowerState.IntPowerState_0; // Внутреняя шина 1\n')
+        codePLC.append(f'\tSTR_LWORD._LWORD.BIT_08 := {self.box}.Inputs_v{self.verPdoSdo}^.PowerState.IntPowerState_1; // Внутреняя шина 2\n')
 
-        codePLC.append(f'\tSTR_LWORD.LWORD_IMAGE := STR_LWORD.LWORD_IMAGE OR SHL(DWORD_TO_LWORD({self.box}.Outputs_v{self.sdo_pdo}^.Discrets), 9); \n\n')
+        codePLC.append(f'\tSTR_LWORD.LWORD_IMAGE := STR_LWORD.LWORD_IMAGE OR SHL(DWORD_TO_LWORD({self.box}.Outputs_v{self.verPdoSdo}^.Discrets), 9); \n\n')
 
         codePLC.append(f'\t{self.box}_HeartBeat_old :=  {self.box}.HeartBeat; \n\n')
 
@@ -1281,12 +1282,12 @@ class EpsilonRegulBusOSV161xx:
             codePLC.append(f'\t// STR_LWORD._LWORD.BIT_04 := FALSE; // B1 (желтый)\n')
             codePLC.append(f'\tSTR_LWORD._LWORD.BIT_05 := ({self.box}.ActiveBusNum = 1); // B2 (зеленый)\n')
             codePLC.append(f'\t// STR_LWORD._LWORD.BIT_06 := FALSE; // B2 (желтый)\n')
-        codePLC.append(f'\tSTR_LWORD._LWORD.BIT_07 := ({self.box}.Inputs_v{self.sdo_pdo}^.PowerState.IntPowerState_0; // Внутреняя шина 1\n')
-        codePLC.append(f'\tSTR_LWORD._LWORD.BIT_08 := ({self.box}.Inputs_v{self.sdo_pdo}^.PowerState.IntPowerState_1; // Внутреняя шина 2\n')
-        codePLC.append(f'\tSTR_LWORD._LWORD.BIT_09 := ({self.box}.Inputs_v{self.sdo_pdo}^.PowerState.ExtPowerState_0; // Внешняя шина 1\n')
-        codePLC.append(f'\tSTR_LWORD._LWORD.BIT_10 := ({self.box}.Inputs_v{self.sdo_pdo}^.PowerState.ExtPowerState_1; // Внешняя шина 2\n')
+        codePLC.append(f'\tSTR_LWORD._LWORD.BIT_07 := ({self.box}.Inputs_v{self.verPdoSdo}^.PowerState.IntPowerState_0; // Внутреняя шина 1\n')
+        codePLC.append(f'\tSTR_LWORD._LWORD.BIT_08 := ({self.box}.Inputs_v{self.verPdoSdo}^.PowerState.IntPowerState_1; // Внутреняя шина 2\n')
+        codePLC.append(f'\tSTR_LWORD._LWORD.BIT_09 := ({self.box}.Inputs_v{self.verPdoSdo}^.PowerState.ExtPowerState_0; // Внешняя шина 1\n')
+        codePLC.append(f'\tSTR_LWORD._LWORD.BIT_10 := ({self.box}.Inputs_v{self.verPdoSdo}^.PowerState.ExtPowerState_1; // Внешняя шина 2\n')
 
-        codePLC.append(f'\tSTR_LWORD.LWORD_IMAGE := STR_LWORD.LWORD_IMAGE OR SHL(DWORD_TO_LWORD({self.box}.Inputs_v{self.sdo_pdo}^.OpenLoadState), 11); // Обрыв \n\n')
+        codePLC.append(f'\tSTR_LWORD.LWORD_IMAGE := STR_LWORD.LWORD_IMAGE OR SHL(DWORD_TO_LWORD({self.box}.Inputs_v{self.verPdoSdo}^.OpenLoadState), 11); // Обрыв \n\n')
 
         codePLC.append(f'\t{self.box}_HeartBeat_old :=  {self.box}.HeartBeat; \n\n')
 
@@ -1356,10 +1357,10 @@ class EpsilonRegulBusOSV161xx:
             codePLC.append(f'\t// STR_LWORD._LWORD.BIT_04 := FALSE; // B1 (желтый)\n')
             codePLC.append(f'\tSTR_LWORD._LWORD.BIT_05 := ({self.box}.ActiveBusNum = 1) AND PLC_RIGHT_MASTER; // B2 (зеленый)\n')
             codePLC.append(f'\t// STR_LWORD._LWORD.BIT_06 := FALSE; // B2 (желтый)\n')
-        codePLC.append(f'\tSTR_LWORD.LWORD_IMAGE := STR_LWORD.LWORD_IMAGE OR SHL(DWORD_TO_LWORD({self.box}.Inputs_v{self.sdo_pdo}^.Byte_0_7), 7); \n')
-        codePLC.append(f'\tSTR_LWORD.LWORD_IMAGE := STR_LWORD.LWORD_IMAGE OR SHL(DWORD_TO_LWORD({self.box}.Inputs_v{self.sdo_pdo}^.Byte_8_15), 14); \n')
-        codePLC.append(f'\tSTR_LWORD.LWORD_IMAGE := STR_LWORD.LWORD_IMAGE OR SHL(DWORD_TO_LWORD({self.box}.Inputs_v{self.sdo_pdo}^.Byte_16_23), 21); \n')
-        codePLC.append(f'\tSTR_LWORD.LWORD_IMAGE := STR_LWORD.LWORD_IMAGE OR SHL(DWORD_TO_LWORD({self.box}.Outputs_v{self.sdo_pdo} ^.Discrets), 31); \n\n')
+        codePLC.append(f'\tSTR_LWORD.LWORD_IMAGE := STR_LWORD.LWORD_IMAGE OR SHL(DWORD_TO_LWORD({self.box}.Inputs_v{self.verPdoSdo}^.Byte_0_7), 7); \n')
+        codePLC.append(f'\tSTR_LWORD.LWORD_IMAGE := STR_LWORD.LWORD_IMAGE OR SHL(DWORD_TO_LWORD({self.box}.Inputs_v{self.verPdoSdo}^.Byte_8_15), 14); \n')
+        codePLC.append(f'\tSTR_LWORD.LWORD_IMAGE := STR_LWORD.LWORD_IMAGE OR SHL(DWORD_TO_LWORD({self.box}.Inputs_v{self.verPdoSdo}^.Byte_16_23), 21); \n')
+        codePLC.append(f'\tSTR_LWORD.LWORD_IMAGE := STR_LWORD.LWORD_IMAGE OR SHL(DWORD_TO_LWORD({self.box}.Outputs_v{self.verPdoSdo} ^.Discrets), 31); \n\n')
 
         codePLC.append(f'\t{self.box}_HeartBeat_old :=  {self.box}.HeartBeat; \n\n')
 
@@ -1416,10 +1417,10 @@ class EpsilonRegulBusOSV161xx:
         codePLC.append(f'\tSTR_LWORD._LWORD.BIT_07 := ({self.box}.PowerState.IntPowerState_0; // Внутреняя шина 1\n')
         codePLC.append(f'\tSTR_LWORD._LWORD.BIT_08 := ({self.box}.PowerState.IntPowerState_1; // Внутреняя шина 2\n')
 
-        codePLC.append(f'\tSTR_LWORD.LWORD_IMAGE := STR_LWORD.LWORD_IMAGE OR SHL(BYTE_TO_LWORD({self.box}.Inputs_v{self.sdo_pdo}^.Byte_0_7), 9); \n')
-        codePLC.append(f'\tSTR_LWORD.LWORD_IMAGE := STR_LWORD.LWORD_IMAGE OR SHL(BYTE_TO_LWORD({self.box}.Inputs_v{self.sdo_pdo}^.Byte_8_15), 16); \n')
-        codePLC.append(f'\tSTR_LWORD.LWORD_IMAGE := STR_LWORD.LWORD_IMAGE OR SHL(BYTE_TO_LWORD({self.box}.Inputs_v{self.sdo_pdo}^.Byte_16_23), 24); \n')
-        codePLC.append(f'\tSTR_LWORD.LWORD_IMAGE := STR_LWORD.LWORD_IMAGE OR SHL(BYTE_TO_LWORD({self.box}.Outputs_v{self.sdo_pdo} ^.Discrets), 31); \n\n')
+        codePLC.append(f'\tSTR_LWORD.LWORD_IMAGE := STR_LWORD.LWORD_IMAGE OR SHL(BYTE_TO_LWORD({self.box}.Inputs_v{self.verPdoSdo}^.Byte_0_7), 9); \n')
+        codePLC.append(f'\tSTR_LWORD.LWORD_IMAGE := STR_LWORD.LWORD_IMAGE OR SHL(BYTE_TO_LWORD({self.box}.Inputs_v{self.verPdoSdo}^.Byte_8_15), 16); \n')
+        codePLC.append(f'\tSTR_LWORD.LWORD_IMAGE := STR_LWORD.LWORD_IMAGE OR SHL(BYTE_TO_LWORD({self.box}.Inputs_v{self.verPdoSdo}^.Byte_16_23), 24); \n')
+        codePLC.append(f'\tSTR_LWORD.LWORD_IMAGE := STR_LWORD.LWORD_IMAGE OR SHL(BYTE_TO_LWORD({self.box}.Outputs_v{self.verPdoSdo} ^.Discrets), 31); \n\n')
 
         codePLC.append(f'\t{self.box}_HeartBeat_old :=  {self.box}.HeartBeat; \n\n')
 
@@ -1473,7 +1474,7 @@ class EpsilonRegulBusOSV161xx:
             codePLC.append(f'\t// STR_LWORD._LWORD.BIT_04 := FALSE; // B1 (желтый)\n')
             codePLC.append(f'\tSTR_LWORD._LWORD.BIT_05 := ({self.box}.ActiveBusNum = 1); // B2 (зеленый)\n')
             codePLC.append(f'\t// STR_LWORD._LWORD.BIT_06 := FALSE; // B2 (желтый)\n')
-        codePLC.append(f'\tSTR_LWORD.LWORD_IMAGE := STR_LWORD.LWORD_IMAGE OR SHL(BYTE_TO_LWORD({self.box}.Inputs_v{self.sdo_pdo}^.LinkStatus), 7); \n\n')
+        codePLC.append(f'\tSTR_LWORD.LWORD_IMAGE := STR_LWORD.LWORD_IMAGE OR SHL(BYTE_TO_LWORD({self.box}.Inputs_v{self.verPdoSdo}^.LinkStatus), 7); \n\n')
 
         codePLC.append(f'\t{self.box}_HeartBeat_old :=  {self.box}.HeartBeat; \n\n')
 
@@ -1577,9 +1578,9 @@ class EpsilonRegulBusOSV161xx:
             codePLC.append(f'\t// STR_LWORD._LWORD.BIT_04 := FALSE; // B1 (желтый)\n')
             codePLC.append(f'\tSTR_LWORD._LWORD.BIT_05 := ({self.box}.ActiveBusNum = 1); // B2 (зеленый)\n')
             codePLC.append(f'\t// STR_LWORD._LWORD.BIT_06 := FALSE; // B2 (желтый)\n')
-        codePLC.append(f'\tSTR_LWORD.LWORD_IMAGE := STR_LWORD.LWORD_IMAGE OR SHL(BYTE_TO_LWORD({self.box}.Inputs_v{self.sdo_pdo}^.LinkStatus), 7); \n')
-        codePLC.append(f'\tSTR_LWORD.LWORD_IMAGE := STR_LWORD.LWORD_IMAGE OR SHL(BYTE_TO_LWORD({self.box}.Inputs_v{self.sdo_pdo}^.Mode), 13); \n')
-        codePLC.append(f'\tSTR_LWORD.LWORD_IMAGE := STR_LWORD.LWORD_IMAGE OR SHL(BYTE_TO_LWORD({self.box}.Inputs_v{self.sdo_pdo}^.PortStatus), 19); \n\n')
+        codePLC.append(f'\tSTR_LWORD.LWORD_IMAGE := STR_LWORD.LWORD_IMAGE OR SHL(BYTE_TO_LWORD({self.box}.Inputs_v{self.verPdoSdo}^.LinkStatus), 7); \n')
+        codePLC.append(f'\tSTR_LWORD.LWORD_IMAGE := STR_LWORD.LWORD_IMAGE OR SHL(BYTE_TO_LWORD({self.box}.Inputs_v{self.verPdoSdo}^.Mode), 13); \n')
+        codePLC.append(f'\tSTR_LWORD.LWORD_IMAGE := STR_LWORD.LWORD_IMAGE OR SHL(BYTE_TO_LWORD({self.box}.Inputs_v{self.verPdoSdo}^.PortStatus), 19); \n\n')
 
         codePLC.append(f'\t{self.box}_HeartBeat_old :=  {self.box}.HeartBeat; \n\n')
 
@@ -1632,15 +1633,15 @@ class EpsilonRegulBusOSV161xx:
             codePLC.append(f'\t// STR_LWORD._LWORD.BIT_04 := FALSE; // B1 (желтый)\n')
             codePLC.append(f'\tSTR_LWORD._LWORD.BIT_05 := ({self.box}.ActiveBusNum = 1); // B2 (зеленый)\n')
             codePLC.append(f'\t// STR_LWORD._LWORD.BIT_06 := FALSE; // B2 (желтый)\n')
-        codePLC.append(f'\tSTR_LWORD._LWORD.BIT_07 := ({self.box}.Inputs_v{self.sdo_pdo}^.Freq1 > 0.1); // Наличие сигнала на CH1\n')
-        codePLC.append(f'\tSTR_LWORD._LWORD.BIT_08 := {self.box}.Inputs_v{self.sdo_pdo}^.Invalid1; // Превышение частоты OV1\n')
-        codePLC.append(f'\tSTR_LWORD._LWORD.BIT_09 := ({self.box}.Inputs_v{self.sdo_pdo}^.Freq2 > 0.1); // Наличие сигнала на CH2\n')
-        codePLC.append(f'\tSTR_LWORD._LWORD.BIT_10 := {self.box}.Inputs_v{self.sdo_pdo}^.Invalid2; // Превышение частоты OV2\n')
-        codePLC.append(f'\tSTR_LWORD._LWORD.BIT_11 := ({self.box}.Inputs_v{self.sdo_pdo}^.Freq3 > 0.1); // Наличие сигнала на CH3\n')
-        codePLC.append(f'\tSTR_LWORD._LWORD.BIT_12 := {self.box}.Inputs_v{self.sdo_pdo}^.Invalid3; // Превышение частоты OV3\n')
+        codePLC.append(f'\tSTR_LWORD._LWORD.BIT_07 := ({self.box}.Inputs_v{self.verPdoSdo}^.Freq1 > 0.1); // Наличие сигнала на CH1\n')
+        codePLC.append(f'\tSTR_LWORD._LWORD.BIT_08 := {self.box}.Inputs_v{self.verPdoSdo}^.Invalid1; // Превышение частоты OV1\n')
+        codePLC.append(f'\tSTR_LWORD._LWORD.BIT_09 := ({self.box}.Inputs_v{self.verPdoSdo}^.Freq2 > 0.1); // Наличие сигнала на CH2\n')
+        codePLC.append(f'\tSTR_LWORD._LWORD.BIT_10 := {self.box}.Inputs_v{self.verPdoSdo}^.Invalid2; // Превышение частоты OV2\n')
+        codePLC.append(f'\tSTR_LWORD._LWORD.BIT_11 := ({self.box}.Inputs_v{self.verPdoSdo}^.Freq3 > 0.1); // Наличие сигнала на CH3\n')
+        codePLC.append(f'\tSTR_LWORD._LWORD.BIT_12 := {self.box}.Inputs_v{self.verPdoSdo}^.Invalid3; // Превышение частоты OV3\n')
 
-        codePLC.append(f'\tSTR_LWORD.LWORD_IMAGE := STR_LWORD.LWORD_IMAGE OR SHL(DWORD_TO_LWORD({self.box}.Inputs_v{self.sdo_pdo}^.DI), 13); \n\n')
-        codePLC.append(f'\tSTR_LWORD.LWORD_IMAGE := STR_LWORD.LWORD_IMAGE OR SHL(DWORD_TO_LWORD({self.box}.Inputs_v{self.sdo_pdo}^.DOState), 19); \n\n')
+        codePLC.append(f'\tSTR_LWORD.LWORD_IMAGE := STR_LWORD.LWORD_IMAGE OR SHL(DWORD_TO_LWORD({self.box}.Inputs_v{self.verPdoSdo}^.DI), 13); \n\n')
+        codePLC.append(f'\tSTR_LWORD.LWORD_IMAGE := STR_LWORD.LWORD_IMAGE OR SHL(DWORD_TO_LWORD({self.box}.Inputs_v{self.verPdoSdo}^.DOState), 19); \n\n')
 
         codePLC.append(f'\t{self.box}_HeartBeat_old :=  {self.box}.HeartBeat; \n\n')
         if self.crateRes:

@@ -75,35 +75,6 @@ class Astra1720RegulBusOS:
         self.racks = []
         self.verPdoSdo = ''
 
-    def part_start(self):
-        codePLC = list()
-        codePLC.append('PsPlcInfoGetSysInfo4(si4);\n')
-        codePLC.append('PsRedundancy_OS.GetAppInfo(tAppInfo);\n\n')
-
-        codePLC.append('// работа таймера задержки\n')
-        codePLC.append('IF ct_delay >= T_SAMPLE THEN\n')
-        codePLC.append('\tct_delay := ct_delay - T_SAMPLE;\n')
-        codePLC.append('END_IF\n\n')
-
-        codePLC.append('// таймер досчитал до нуля\n')
-        codePLC.append('IF ct_delay < T_SAMPLE THEN\n')
-        codePLC.append('\tct_delay := t_delay;	// присвоить время задержки\n')
-
-        codePLC.append('\t// Определение ведующего и ведомого ПЛК (задержка на t_delay)\n')
-        codePLC.append('\tPLC_LEFT_MASTER := MSKU_1A2_STATE.STATE.10;\n')
-        codePLC.append('\tPLC_LEFT_SLAVE := MSKU_1A2_STATE.STATE.8;\n')
-
-        codePLC.append('\tPLC_RIGHT_MASTER := MSKU_2A2_STATE.STATE.10;\n')
-        codePLC.append('\tPLC_RIGHT_SLAVE := MSKU_2A2_STATE.STATE.8;)\n\n\n')
-
-        return codePLC
-
-    def part_end(self):
-        codePLC = list()
-        codePLC.append('END_IF')
-
-        return codePLC
-
     def st_02_012(self):
         """
         функция генерации кода для
@@ -501,7 +472,7 @@ class Astra1720RegulBusOS:
             type_module = 'ERROR********/// '
 
         match self.verPdoSdo:
-            case '05':
+            case '5':
                 type_break = 'Discarded'
             case '30':
                 type_break = 'Break'
@@ -626,9 +597,9 @@ class Astra1720RegulBusOS:
             type_module = 'ERROR********/// '
 
         match self.verPdoSdo:
-            case '05':
+            case '5':
                 type_break = 'Break'
-            case '01' | '30':
+            case '1' | '30':
                 type_break = 'Discarded'
             case _:
                 type_break = 'ERROR********///'
@@ -749,7 +720,7 @@ class Astra1720RegulBusOS:
             type_module = 'ERROR********/// '
 
         match self.verPdoSdo:
-            case '05':
+            case '5':
                 type_break = 'Discarded'
             case '30':
                 type_break = 'Break'
@@ -891,7 +862,7 @@ class Astra1720RegulBusOS:
             type_module = 'ERROR********/// '
 
         match self.verPdoSdo:
-            case '05':
+            case '5':
                 type_break = 'Discarded'
             case '30':
                 type_break = 'Break'
@@ -1014,9 +985,9 @@ class Astra1720RegulBusOS:
             type_module = 'ERROR********/// '
 
         match self.verPdoSdo:
-            case '05':
+            case '5':
                 type_break = 'Break'
-            case '02' | '30':
+            case '2' | '30':
                 type_break = 'Discarded'
             case _:
                 type_break = 'ERROR********///'
@@ -1165,7 +1136,7 @@ class Astra1720RegulBusOS:
             type_module = 'ERROR********/// '
 
         match self.verPdoSdo:
-            case '05':
+            case '5':
                 type_break = 'Break'
             case '30':
                 type_break = 'Discarded'
@@ -1418,7 +1389,7 @@ class Astra1720RegulBusOS:
             type_module = 'ERROR********/// '
 
         match self.verPdoSdo:
-            case '05':
+            case '5':
                 type_break = 'Break'
             case '30':
                 type_break = 'Discarded'

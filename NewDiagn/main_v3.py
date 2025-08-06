@@ -1,5 +1,7 @@
 import pandas as pd
 import os
+import lxml.etree as ET
+import uuid
 
 # Импортируем классы RegulBus и RegulBusOs
 from _templates.PLC.Astra1720RegulBus import Astra1720RegulBus
@@ -19,20 +21,21 @@ class DataProcessor:
         self.output_fb_cpu_diagn_modules = os.path.join(self.output_dir_plc, "FB_DIAG_CPU_MODULES.txt")
         self.output_db_cpu_diagn_modules = os.path.join(self.output_dir_plc, "DB_DIAG_CPU_MODULES.txt")
         self.output_crmem_cpu_diagn_modules = os.path.join(self.output_dir_plc, "CrossMem_DIAG_CPU_MODULES.txt")
+        self.output_faceplate_hmi = ''
 
         self.pathOmobj = '_omobj'
         self.extension = r'.omobj'  # расширение заданных файлов
         self.containNameFile = '_Diagn_Rack_'  # строка которая находится в имени файла
 
         # Необходимые ключи из вкладки INFO
-        self.profile_keys = [
-            "INFO_KKS_a1", "INFO_KKS_a2", "INFO_KKS_a3",
-            "INFO_DESCRIPTION_a1", "INFO_DESCRIPTION_a2", "INFO_DESCRIPTION_a3", "INFO_BOX_MSKU",
-            "INFO_BOX_RIO1", "INFO_BOX_RIO2", "INFO_BOX_RIO3", "INFO_BOX_RIO4",
-            "INFO_BOX_RIO5", "INFO_BOX_RIO6", "INFO_BOX_RIO7", "INFO_BOX_RIO8",
-            "INFO_BOX_RIO9", "INFO_BOX_RIO10", "INFO_BOX_RIO11", "INFO_BOX_RIO12",
-            "INFO_BOX_RIO13", "INFO_BOX_RIO14", "INFO_BOX_RIO15", "INFO_BUS_TYPE", "INFO_RED_TYPE",
-            "INFO_DEVELOP"
+        self.profile_keys = ["INFO_PROJECT_NAME",
+                             "INFO_KKS_a1", "INFO_KKS_a2", "INFO_KKS_a3",
+                             "INFO_DESCRIPTION_a1", "INFO_DESCRIPTION_a2", "INFO_DESCRIPTION_a3", "INFO_BOX_MSKU",
+                             "INFO_BOX_RIO1", "INFO_BOX_RIO2", "INFO_BOX_RIO3", "INFO_BOX_RIO4",
+                             "INFO_BOX_RIO5", "INFO_BOX_RIO6", "INFO_BOX_RIO7", "INFO_BOX_RIO8",
+                             "INFO_BOX_RIO9", "INFO_BOX_RIO10", "INFO_BOX_RIO11", "INFO_BOX_RIO12",
+                             "INFO_BOX_RIO13", "INFO_BOX_RIO14", "INFO_BOX_RIO15", "INFO_BUS_TYPE", "INFO_RED_TYPE",
+                             "INFO_DEVELOP"
         ]
 
         # Экземпляры всех функции для генерации кода PLC
@@ -50,6 +53,24 @@ class DataProcessor:
         self.name_db = 'DIAG_CPU_MODULES'  # имя DB, где хранятся все STATE по всем модулям
         self.is_redundant = False
         self.create_is_redundant = []  # Крейт который является резервным
+
+        self.df_uuid = pd.DataFrame()
+
+        # Для рассчета геометрии экрана мы будем использовать список, в котором будут передаваться следующие значения
+        # номер Rack это номер индекса списка
+        # 0 - номер экрана
+        # 1 - стартовая координата X
+        # 2 - стартовая координата Y
+        self.geometryScreen = list()  # спиоск с геометрией экрана
+        self.maxLvlY = 2  # максимальное число уровней для расположения Rack на экране
+        self.intravalBetweenRack = 21  # расстояние между Rack
+        self.sizeFrameX = 2260  # размер экрана по x
+        self.sizeFrameY = 1090  # размер экрана по y
+        self.sizeModulX = 100  # размер модуля по x
+        self.sizeModulY = 460  # размер модуля по y
+        self.sizeOffset1 = 5  # отступы от рамки справа, слева, снизу
+        self.sizeOffset2 = 20  # отступы от рамки справа, слева, снизу
+        self.sizeOffsetStModul = 160  # смещение для оконечных модулей
 
     def read_excel_file(self, file_path, sheet_name, header_row=1):
         """
@@ -600,7 +621,7 @@ class DataProcessor:
         # читаем каждый файл в указанной директории
         for filename in os.listdir(self.pathOmobj):
             # фильтр на файлы
-            if filename.endswith(self.extension) and (self.containNameFile in filename)):
+            if filename.endswith(self.extension) and (self.containNameFile in filename):
                 file_path = os.path.join(self.pathOmobj, filename)
                 print(file_path)
                 with open(file_path, 'r') as file:
@@ -619,29 +640,167 @@ class DataProcessor:
                 'uuid': uuidList,
                 'name': nameList}
         df = pd.DataFrame(data)
-        self.uuid = df.copy()
+        self.df_uuid = df.copy()
         # запись в файл
-        df.to_csv(self.pathOutputFolder + r'\uuid.csv', sep=';', index=True)
+        df.to_csv(self.output_dir_scada + r'\uuid.csv', sep=';', index=True)
 
     def generate_uuid(self, curObject):
-        self.newUuid = False
-        for indx in range(0, self.uuid['fileName'].__len__(), 1):
-            fileName = str(self.uuid['fileName'].iloc[indx])
+        newUuid = False
+        for indx in range(0, self.df_uuid['fileName'].__len__(), 1):
+            fileName = str(self.df_uuid['fileName'].iloc[indx])
             if fileName.startswith(curObject):
-                uuidStr = self.uuid['uuid'].values[indx]
-                name = self.uuid['name'].values[indx]
-                self.newUuid = True
-                return uuidStr, name
+                uuidStr = self.df_uuid['uuid'].values[indx]
+                name = self.df_uuid['name'].values[indx]
+                newUuid = True
+                return uuidStr
         # если не нашли нужный экран
         uuidUniq = False
         while (not uuidUniq):
             uuidNew = str(uuid.uuid4())
-            if self.uuid['uuid'].__len__() == 0:
+            if self.df_uuid['uuid'].__len__() == 0:
                 uuidUniq = True
-            for indx in range(0, self.uuid['uuid'].__len__(), 1):
-                uuidFile = str(self.uuid['uuid'].iloc[indx])
+            for indx in range(0, self.df_uuid['uuid'].__len__(), 1):
+                uuidFile = str(self.df_uuid['uuid'].iloc[indx])
                 uuidUniq = False if uuidNew == uuidFile else True # если uuid уникальный, то заканчиваем цикл While
-        return uuidNew, curObject
+        return uuidNew
+
+    # функция определения расположения крейтов по экранам
+    def oprPositionRack_v2(self, crates):
+        # на каждом экране будем располагать несколько крейтов
+        # мы должны рассчитать какое пространство занимает каждый крейт
+        # размеры всех модулей одинаковы
+        # мы разделяем все пространство по Y на уровни
+        # при размерах (по Y) 380 пикселей, полноценно влазиет 3 уровня, 1150/380 = 3.02
+        # когда мы не влазием по X, то переходим на Y
+        # когда на следующем уровне не влазием по Y, переходим на навый экран
+
+        n_crate_frame = 0 # количество крейтов на экране, ограничиваем чтобы больше 3 не было
+
+        busySpaceX = 0  # занямаемое пространство текущим Rack по X
+        busySpaceY = 0  # занямаемое пространство текущим Rack по Y
+        emptySpaceX = self.sizeFrameX  # оставшиеся свободное пространство по X
+        emptySpaceY = self.sizeFrameY  # оставшиеся свободное пространство по Y
+        startcoordX = 10
+        startcoordY = 30
+        cordX = startcoordX  # координата X для нового Rack на экране
+        cordY = startcoordY  # координата Y для нового Rack на экране
+        n_screen = 0  # номер экрана
+        lvlY = 1  # уровень по Y
+        geometryRack = list()  # список с геометрией каждого крейта
+
+        # идем по всем крейтам
+        for jndex, crate in enumerate(crates):
+            # считаем какое пространство занимает Rack по X
+            # Nmodul*sizemodule + 2*intr + 2*intBetw, где
+            # Nmodul - число модулей
+            # sizemodule - размер одного модуля по x
+            # intr - интервалы от рамки до крайних модулей
+            # intBetw - интервалы между Rack
+            busySpaceX = (crate.__len__() * self.sizeModulX) + (2 * self.intravalBetweenRack) + (2 * self.sizeOffset1)
+            n_crate_frame += 1
+            pass
+            # определение наличие пустого места
+            # если места хватает по Х, то размещаем данный крейт, и вычитаем свободное место
+            if busySpaceX < emptySpaceX and (n_crate_frame < 3):
+                emptySpaceX -= busySpaceX  # вычитаем занятое пространство
+                pass
+            # если места на текущем уровне не хватает, и есть свободный уровень, то переходим на него
+            elif ((busySpaceX > emptySpaceX) and (lvlY < self.maxLvlY)) or n_crate_frame == 3:
+                lvlY += 1  # следующий уровень
+                cordX = startcoordX  # выставляем стартовую координату X
+                cordY = self.sizeModulY + 4 * self.sizeOffset2  # выставляем Y на ширину модуля+смещение
+                emptySpaceX = self.sizeFrameX - busySpaceX if n_crate_frame < 3 else 0  # обновляем свободное пространство по X
+                pass
+            # если нужен новый экран
+            else:
+                n_screen += 1  # меняем номер экрана
+                lvlY = 1  # сбрасываем уровень в 1
+                cordX = startcoordX  # выставляем координату X в начало
+                cordY = startcoordY  # выставляем координату Y в начало
+                emptySpaceX = self.sizeFrameX - busySpaceX  # обновляем свободное пространство
+
+            geometryRack.append([n_screen, cordX, cordY])  # записываем координаты для Rack в виде [n_screen, x, y]
+            cordX += 2 * self.intravalBetweenRack + self.sizeModulX * crate.__len__() + 2 * self.sizeOffset1
+        # копируем geometryRack
+        self.geometryScreen = geometryRack.copy()
+
+    # функция задания имени экрана
+    def genNameScreen(self, name):
+        # проверка на наличие экрана с таким же именем
+        for indx in range(0, self.df_uuid['fileName'].__len__(), 1):
+            nameFile = str(self.df_uuid['fileName'].values[indx])
+            if nameFile.startswith(name):
+                return self.df_uuid['name'].values[indx]
+        return name
+
+    def genScreensHMI(self, crates):
+        module_cord_x = 5
+        module_cord_y = 25
+        codeHmi = list()
+        new_screen = False
+        new_screen_old = '-1'
+        for jndex, crate in enumerate(crates):
+            # номер экрана
+            n_screen = str(self.geometryScreen[jndex][0])
+
+             # если номер экрана отличается от предыдущего, то создаем новый экран
+            if new_screen_old != n_screen:
+                # завершаем прошлый экран (но только не для первого прохода)
+                if new_screen_old != '-1':
+                    codeHmi.extend(self.alpha_hmi.mainScreenEnd())
+                    # сохраняем в файл
+                    self.output_faceplate_hmi = os.path.join(self.output_dir_scada, f"{nameScreen}.omobj")
+                    with open(self.output_faceplate_hmi, 'w', encoding='utf-8') as f_alpha:
+                        f_alpha.write('\n'.join(codeHmi))  # пишем файл
+                    # Очищаем список
+                    # TODO проверить данную операцию
+                    codeHmi = list()
+                new_screen_old = n_screen
+
+                #создаем новый экран
+                nameScreen = self.genNameScreen(f"{self.info_data['INFO_PROJECT_NAME']}_Diagn_Rack_{n_screen}")
+                uuid_str = self.generate_uuid(nameScreen)
+                codeHmi.extend(self.alpha_hmi.mainScreenBegin(nameScreen, uuid_str))
+
+            # создаем экземпляры каждого модуля
+            for index, module in enumerate(crate):
+                module_catalog = module["MODULE_CATALOG"]
+                self.alpha_hmi.name = f"{module['BOX']}_{module['UNIT_POSITION']}"
+
+                self.alpha_hmi.tagName = f"root_{self.info_data['INFO_PROJECT_NAME']}.GLOBAL.DIAG_MODULES.{self.info_data['INFO_PROJECT_NAME']}_{module['BOX']}_{module['UNIT_POSITION']}.DIAG_MODULE"
+                self.alpha_hmi.Box_UnitPos = f"{module['BOX']}_{module['UNIT_POSITION']}"
+                self.alpha_hmi.TypeModule = str(module_catalog)[:str(module_catalog).find('[')].replace(' ','') if '[' in str(module_catalog) else str(module_catalog)
+                self.alpha_hmi.Res = self.is_redundant
+                # создаем рамку вокруг крейтов
+                if index == 0:
+                    name = f'Crate_{jndex}'
+                    width = str(self.sizeModulX * len(crate) + 2 * self.sizeOffset1)
+                    info_box = self.info_data[f'INFO_BOX_{module["BOX"]}']
+                    # TODO str(crate['UNIT_POSITION'])[:2] проверить данную часть
+                    text = f"{self.info_data['INFO_PROJECT_NAME']}. {info_box}. Крейт {str(module['UNIT_POSITION'])[:2]}"
+                    self.alpha_hmi.x = self.geometryScreen[jndex][1]
+                    self.alpha_hmi.y = self.geometryScreen[jndex][2]
+                    codeHmi.extend(self.alpha_hmi.frameRackBegin(name, width, text))
+                    # сбрасываем координаты модулей в начальные
+                    module_cord_x = 5
+                    module_cord_y = 25
+
+                if 'R500-PP-00-011 [PS 75W]' in module['MODULE_CATALOG']:
+                    self.alpha_hmi.Bit += 1
+                self.alpha_hmi.x = module_cord_x
+                self.alpha_hmi.y = module_cord_y
+                self.alpha_hmi.uuid = self.generate_uuid(f"{module['BOX']}_{module['UNIT_POSITION']}")  # TODO Проверить тут
+                module_string = self.alpha_hmi.dispatch_table[module_catalog]
+                codeHmi.extend(module_string())
+                module_cord_x += self.sizeModulX
+
+            # на последнем крейте завершаем все
+            codeHmi.extend(self.alpha_hmi.frameRackEnd())
+        codeHmi.extend(self.alpha_hmi.mainScreenEnd())
+        # сохраняем в файл
+        self.output_faceplate_hmi = os.path.join(self.output_dir_scada, f"{nameScreen}.omobj")
+        with open(self.output_faceplate_hmi, 'w', encoding='utf-8') as f_alpha:
+            f_alpha.write('\n'.join(codeHmi))  # пишем файл
 
 if __name__ == '__main__':
     # 1. Создаем экземпляр класса DataProcessor
@@ -691,7 +850,10 @@ if __name__ == '__main__':
         processor.generate_global_DB(crates)
         processor.generate_diag_cpu_modules(crates)
 
-        #Генерация для SCADA
+        # 10. Генерация для SCADA
+        processor.defineUUID()
+        processor.oprPositionRack_v2(crates)
+        processor.genScreensHMI(crates)
 
     else:
         print("Крейты не найдены.")

@@ -27,7 +27,7 @@ class AlphaHmi:
                                'R500-AI-16-011 [SM 16AI I]': self.ai_16_011,
                                'R500-AI-16-081 [SM 16AI I]': self.ai_16_011,
 
-                               # 'R500-AI-16-012 [SM 16AI I]': '',
+                               'R500-AI-16-012 [SM 16AI I]': self.ai_16_011,
 
                                'R500-AO-08-011 [SM 8AO I]': self.ao_08_011,
                                'R500-AO-08-021 [SM 8AO I]': self.ao_08_011,
@@ -83,15 +83,17 @@ class AlphaHmi:
         Это общие строки для модулей ввода вывода
         """
         codeHmi = list()
-
+        if 'R500-ST' in self.TypeModule:
+            sizeModule = '300'
+            y = str(int(self.y) + 160)
+        else:
+            sizeModule = '460'
+            y = self.y
         codeHmi.append(f'\t\t\t\t<designed target="X" value="{self.x}" ver="5"/>')
-        codeHmi.append(f'\t\t\t\t<designed target="Y" value="{self.y}" ver="5"/>')
+        codeHmi.append(f'\t\t\t\t<designed target="Y" value="{y}" ver="5"/>')
         codeHmi.append(f'\t\t\t\t<designed target="Rotation" value="0" ver="5"/>')
         codeHmi.append(f'\t\t\t\t<designed target="Width" value="100" ver="5"/>')
-        if 'R500-ST' in self.TypeModule:
-            sizeModule = 300
-        else:
-            sizeModule = 460
+
         codeHmi.append(f'\t\t\t\t<designed target="Height" value="{sizeModule}" ver="5"/>')
         codeHmi.append(f'\t\t\t\t<init target="tagName" ver="5" value="{self.tagName}"/>')
         codeHmi.append(f'\t\t\t\t<init target="_Box_UnitPos" ver="5" value="{self.Box_UnitPos}"/>')

@@ -664,6 +664,62 @@ class DataProcessor:
                 uuidUniq = False if uuidNew == uuidFile else True # если uuid уникальный, то заканчиваем цикл While
         return uuidNew
 
+    def process_geometry_rack(self, geometry_rack):
+        """
+         Обрабатывает список geometryRack, состоящий из вложенных списков [номер экрана, x, y, размер].
+
+         1. Группирует элементы по номеру экрана.
+         2. Для каждой группы (экрана):
+             - Если есть элементы с одинаковым y, смещает их, как и раньше.
+             - Если на экране только один элемент, ничего не делает.
+             - Если на экране 2 элемента с разными y, смещает их обоих,
+               рассчитывая смещение исходя из их размеров.
+             - Если на экране 3 элемента, и только 2 с одинаковым y,
+               смещает только те два, что с одинаковым y.
+
+         Args:
+             geometry_rack: Список вложенных списков [номер экрана, x, y, размер], где x и y - числа.
+
+         Returns:
+             Список geometryRack с измененными значениями x (в виде строк).
+         """
+
+        screen_groups = {}
+        for item in geometry_rack:
+            screen_number = item[0]
+            if screen_number not in screen_groups:
+                screen_groups[screen_number] = []
+            screen_groups[screen_number].append(item)
+
+        for screen_number, items in screen_groups.items():
+            if len(items) == 1:
+                continue  # Ничего не делаем, если элемент один
+
+            # Группируем по y
+            y_groups = {}
+            for item in items:
+                y = item[2]
+                if y not in y_groups:
+                    y_groups[y] = []
+                y_groups[y].append(item)
+
+            for y, items_with_same_y in y_groups.items():
+                if len(items_with_same_y) > 1:
+                    # Смещаем элементы с одинаковым y
+                    total_size = sum(item[3] for item in items_with_same_y)
+                    offset = (2260 - (total_size + (len(items_with_same_y) - 1) * 51)) / 2
+                    for item in items_with_same_y:
+                        item[1] = str(int(item[1] + offset))
+                elif len(items) == 2 and len(y_groups) == 2:  # Два элемента с разными y
+                    # Смещаем оба элемента
+                    total_size = sum(item[3] for item in items)
+                    offset = (2260 - (total_size + 51)) / 2  # Только один отступ
+                    for item in items:
+                        item[1] = item[1] + offset
+
+        return geometry_rack
+
+
     # функция определения расположения крейтов по экранам
     def oprPositionRack_v2(self, crates):
         # на каждом экране будем располагать несколько крейтов
@@ -719,8 +775,13 @@ class DataProcessor:
                 cordY = startcoordY  # выставляем координату Y в начало
                 emptySpaceX = self.sizeFrameX - busySpaceX  # обновляем свободное пространство
 
-            geometryRack.append([n_screen, cordX, cordY])  # записываем координаты для Rack в виде [n_screen, x, y]
+            geometryRack.append([n_screen, cordX, cordY, self.sizeModulX * crate.__len__()])  # записываем координаты для Rack в виде [n_screen, x, y, длина крейта]
             cordX += 2 * self.intravalBetweenRack + self.sizeModulX * crate.__len__() + 2 * self.sizeOffset1
+        # центруем положение объектов
+        pass
+        test = self.process_geometry_rack(geometryRack)
+        pass
+
         # копируем geometryRack
         self.geometryScreen = geometryRack.copy()
 

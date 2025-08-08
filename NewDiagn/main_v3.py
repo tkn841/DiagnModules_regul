@@ -28,7 +28,7 @@ class DataProcessor:
         self.containNameFile = '_Diagn_Rack_'  # строка которая находится в имени файла
 
         # Необходимые ключи из вкладки INFO
-        self.profile_keys = ["INFO_PROJECT_NAME",
+        self.profile_keys = ["INFO_PROJECT_NAME", "INFO_AGREGAT",
                              "INFO_KKS_a1", "INFO_KKS_a2", "INFO_KKS_a3",
                              "INFO_DESCRIPTION_a1", "INFO_DESCRIPTION_a2", "INFO_DESCRIPTION_a3", "INFO_BOX_MSKU",
                              "INFO_BOX_RIO1", "INFO_BOX_RIO2", "INFO_BOX_RIO3", "INFO_BOX_RIO4",
@@ -514,6 +514,7 @@ class DataProcessor:
 
     def generate_global_DB(self, crates):
         codeGlobal = list()  # список для глобальных переменных
+        codeGlobal.append("{attribute 'symbol' := 'none'}\n")
         codeGlobal.append('VAR_GLOBAL\n')
 
         for jndex, crate in enumerate(crates):
@@ -539,27 +540,33 @@ class DataProcessor:
                         codeGlobal.append(f"\t{module['BOX']}_{module['UNIT_POSITION']}_REMOTE2: LWORD;\n")
                         codeGlobal.append(f"\t{module['BOX']}_{module['UNIT_POSITION']}_LOCAL3: LWORD;\n")
                         codeGlobal.append(f"\t{module['BOX']}_{module['UNIT_POSITION']}_REMOTE3: LWORD;\n")
+                        codeGlobal.append("\t{attribute 'symbol' := 'read'}\n")
                         codeGlobal.append(f"\t{module['BOX']}_{module['UNIT_POSITION']}_STATE2: LWORD; // Передаем на SCADA\n")
+                        codeGlobal.append("\t{attribute 'symbol' := 'read'}\n")
                         codeGlobal.append(f"\t{module['BOX']}_{module['UNIT_POSITION']}_STATE3: LWORD; // Передаем на SCADA\n")
 
                 if '-CU-' in str(module["MODULE_CATALOG"]):
                     if self.is_redundant and jndex == 0:
                         codeGlobal.append(f"\t{module['BOX']}_{module['UNIT_POSITION']}_LOCAL: STRUCT_STATUS_PLC;\n")
                         codeGlobal.append(f"\t{module['BOX']}_{module['UNIT_POSITION']}_REMOTE: STRUCT_STATUS_PLC;\n")
+                    codeGlobal.append("\t{attribute 'symbol' := 'read'}\n")
                     codeGlobal.append(f"\t{module['BOX']}_{module['UNIT_POSITION']}_STATE: STRUCT_STATUS_PLC; // Передаем на SCADA\n")
                 else:
+                    codeGlobal.append("\t{attribute 'symbol' := 'read'}\n")
                     codeGlobal.append(f"\t{module['BOX']}_{module['UNIT_POSITION']}_STATE: LWORD; // Передаем на SCADA\n")
 
         # переменные для блоков питания
         if self.is_redundant:
             codeGlobal.append('\tPS_LOCAL: LWORD;\n')
             codeGlobal.append('\tPS_REMOTE: LWORD;\n')
+        codeGlobal.append("\t{attribute 'symbol' := 'read'}\n")
         codeGlobal.append('\tPS_STATE: LWORD; // Передаем на SCADA\n')
 
         # переменные ErrorRACK
         if self.is_redundant:
             codeGlobal.append('\tErrorRACK_LOCAL: LWORD;\n')
             codeGlobal.append('\tErrorRACK_REMOTE: LWORD;\n')
+        codeGlobal.append("\t{attribute 'symbol' := 'read'}\n")
         codeGlobal.append('\tErrorRACK: LWORD; // Передаем на SCADA\n')
         codeGlobal.append('END_VAR')
 
@@ -692,9 +699,6 @@ class DataProcessor:
             screen_groups[screen_number].append(item)
 
         for screen_number, items in screen_groups.items():
-            if len(items) == 1:
-                continue  # Ничего не делаем, если элемент один
-
             # Группируем по y
             y_groups = {}
             for item in items:
@@ -709,19 +713,20 @@ class DataProcessor:
                     total_size = sum(item[3] for item in items_with_same_y)
                     offset = (2260 - (total_size + (len(items_with_same_y) - 1) * 51)) / 2
                     for item in items_with_same_y:
-                        item[1] = str(int(item[1] + offset))
-                elif len(items) == 2 and len(y_groups) == 2:  # Два элемента с разными y
+                        item[1] = item[1] + offset
+                # elif len(items) == 2 and len(y_groups) == 2:  # Два элемента с разными y
+                else:
                     # Смещаем оба элемента
-                    total_size = sum(item[3] for item in items)
-                    offset = (2260 - (total_size + 51)) / 2  # Только один отступ
-                    for item in items:
+                    total_size = items_with_same_y[0][3]
+                    offset = (2260 - total_size) / 2  # Только один отступ
+                    for item in items_with_same_y:
                         item[1] = item[1] + offset
 
         return geometry_rack
 
 
     # функция определения расположения крейтов по экранам
-    def oprPositionRack_v2(self, crates):
+    def oprPositionRack(self, crates):
         # на каждом экране будем располагать несколько крейтов
         # мы должны рассчитать какое пространство занимает каждый крейт
         # размеры всех модулей одинаковы
@@ -831,14 +836,14 @@ class DataProcessor:
                 self.alpha_hmi.tagName = f"root_{self.info_data['INFO_PROJECT_NAME']}.GLOBAL.DIAG_MODULES.{self.info_data['INFO_PROJECT_NAME']}_{module['BOX']}_{module['UNIT_POSITION']}.DIAG_MODULE"
                 self.alpha_hmi.Box_UnitPos = f"{module['BOX']}_{module['UNIT_POSITION']}"
                 self.alpha_hmi.TypeModule = str(module_catalog)[:str(module_catalog).find('[')].replace(' ','') if '[' in str(module_catalog) else str(module_catalog)
-                self.alpha_hmi.Res = self.is_redundant
+                self.alpha_hmi.Res = str(self.is_redundant).replace('T', 't').replace('F', 'f')
                 # создаем рамку вокруг крейтов
                 if index == 0:
                     name = f'Crate_{jndex}'
                     width = str(self.sizeModulX * len(crate) + 2 * self.sizeOffset1)
                     info_box = self.info_data[f'INFO_BOX_{module["BOX"]}']
                     # TODO str(crate['UNIT_POSITION'])[:2] проверить данную часть
-                    text = f"{self.info_data['INFO_PROJECT_NAME']}. {info_box}. Крейт {str(module['UNIT_POSITION'])[:2]}"
+                    text = f"{self.info_data['INFO_AGREGAT']}. {info_box}. Крейт {str(module['UNIT_POSITION'])[:2]}"
                     self.alpha_hmi.x = self.geometryScreen[jndex][1]
                     self.alpha_hmi.y = self.geometryScreen[jndex][2]
                     codeHmi.extend(self.alpha_hmi.frameRackBegin(name, width, text))
@@ -913,7 +918,7 @@ if __name__ == '__main__':
 
         # 10. Генерация для SCADA
         processor.defineUUID()
-        processor.oprPositionRack_v2(crates)
+        processor.oprPositionRack(crates)
         processor.genScreensHMI(crates)
 
     else:
